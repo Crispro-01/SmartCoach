@@ -1,0 +1,118 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #F2F2F2;
+}
+
+.contenedor-login {
+    display: flex;
+    min-height: 100vh;
+}
+
+.panel-marca {
+    width: 50%;
+    background-color: #0066CC;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.panel-formulario {
+    width: 50%;
+    background-color: #F2F2F2;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 40px;
+}
+
+/* TARJETA */
+
+.tarjeta-login {
+    width: 100%;
+    max-width: 520px;
+    background-color: white;
+    padding: 50px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.tarjeta-login h2 {
+    font-size: 38px;
+    margin: 0 0 5px;
+}
+
+.tarjeta-login h3 {
+    font-size: 27px;
+    font-weight: normal;
+    margin: 0 0 40px;
+}
+
+/* CAMPOS */
+
+.campo {
+    margin-bottom: 24px;
+}
+
+.campo label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.campo input {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    border: 1px solid #CBD5E1;
+    border-radius: 10px;
+}
+
+.campo input:focus {
+    outline: none;
+    border-color: #0066CC;
+}
+
+/* BOTÓN */
+
+.boton-login {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 10px;
+    background-color: #F57C00;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.boton-login:hover {
+    background-color: #E65100;
+}
+
+/* REGISTRO */
+
+.texto-registro {
+    margin-top: 25px;
+    text-align: center;
+}
+
+.texto-registro a {
+    color: #0066CC;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.texto-registro a:hover {
+    text-decoration: underline;
+}
