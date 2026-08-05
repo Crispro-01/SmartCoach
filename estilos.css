@@ -24,6 +24,16 @@ body {
     padding: 40px;
 }
 
+.imagen-equipo {
+    width: 100%;
+    max-width: 530px;
+    max-height: 400px;
+    margin-top: 20px;
+    border-radius: 18px;
+    object-fit: cover;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
 .panel-formulario {
     width: 50%;
     background-color: #F2F2F2;
@@ -115,4 +125,18 @@ body {
 
 .texto-registro a:hover {
     text-decoration: underline;
+}
+
+.mensaje-exito {
+    margin-top: 18px;
+    color: #15803D;
+    font-weight: bold;
+    text-align: center;
+}
+
+.mensaje-error {
+    margin-top: 18px;
+    color: #DC2626;
+    font-weight: bold;
+    text-align: center;
 }
