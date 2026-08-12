@@ -13,6 +13,8 @@ console.log("Contraseña ingresada:", contrasena.length > 0);
 if (correo === "admin@smartcoach.com" && contrasena === "Demo1234") {
     mensajeLogin.textContent = "Inicio de sesión correcto.";
     mensajeLogin.className = "mensaje-exito";
+    
+    window.location.href = "dashboard.html";
 } else {
     mensajeLogin.textContent = "Correo o contraseña incorrectos.";
     mensajeLogin.className = "mensaje-error";

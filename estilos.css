@@ -140,3 +140,45 @@ body {
     font-weight: bold;
     text-align: center;
 }
+
+/* DASHBOARD */
+
+.dashboard {
+    display: flex;
+    min-height: 100vh;
+}
+
+.menu-lateral {
+    width: 240px;
+    background-color: #0F172A;
+    color: white;
+    padding: 30px 20px;
+}
+
+.contenido-dashboard {
+    flex: 1;
+    background-color: #F2F2F2;
+    padding: 40px;
+}
+
+.navegacion-menu {
+    display: flex;
+    flex-direction: column;
+    margin-top: 40px;
+    gap: 12px;
+}
+
+.navegacion-menu a {
+    color: white;
+    text-decoration: none;
+    padding: 12px 14px;
+    border-radius: 8px;
+}
+
+.navegacion-menu a:hover {
+    background-color: #1E293B;
+}
+
+.navegacion-menu a.activo {
+    background-color: #0066CC;
+}
