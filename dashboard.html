@@ -13,6 +13,7 @@
     <title>Smart Coach - Dashboard</title>
 
     <link rel="stylesheet" href="estilos.css">
+    <script src="menu.js" defer></script>
 </head>
 
 <body>
@@ -21,15 +22,16 @@
 
         <aside class="menu-lateral">
 
-            <h1>Smart Coach</h1>
+            <div class="cabecera-menu">
+                <h1>Smart Coach</h1>
+                <button type="button" class="boton-menu" aria-label="Contraer menú" aria-expanded="true">☰</button>
+            </div>
 
             <nav class="navegacion-menu">
 
                 <a href="dashboard.html" class="activo">Inicio</a>
 
                 <a href="agentes.html">Agentes</a>
-
-                <a href="nueva-sesion.html">Nueva sesión</a>
 
                 <a href="historial.html">Historial</a>
 
@@ -79,10 +81,6 @@
             
                     <a href="agentes.html" class="accion-rapida">
                         Gestionar agentes
-                    </a>
-
-                    <a href="nueva-sesion.html" class="accion-rapida">
-                        Nueva sesión de coaching
                     </a>
 
                     <a href="historial.html" class="accion-rapida">
