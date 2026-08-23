@@ -773,6 +773,483 @@ body {
     color: #1D4ED8;
 }
 
+/* FORMULARIO COACHING GROW */
+
+.tarjeta-coaching {
+    max-width: 1250px;
+}
+
+.cabecera-coaching {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px;
+    align-items: start;
+    gap: 24px;
+}
+
+.informacion-cabecera-coaching {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.fecha-inicio-coaching {
+    width: 170px;
+    gap: 0;
+}
+
+.fecha-inicio-coaching label {
+    margin-bottom: 1px;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.fecha-inicio-coaching input {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 9px;
+    font-size: 12px;
+}
+
+.titulo-cabecera-coaching {
+    width: 100%;
+}
+
+.cronometro-coaching {
+    min-width: 150px;
+    padding: 10px 13px;
+    border: 1px solid #CBD5E1;
+    border-radius: 9px;
+    background-color: #F8FAFC;
+    color: #334155;
+    text-align: center;
+}
+
+.cronometro-coaching > span {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.control-cronometro-coaching {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+}
+
+.boton-iniciar-cronometro {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background-color: #F97316;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.boton-iniciar-cronometro:hover {
+    background-color: #EA580C;
+}
+
+.boton-iniciar-cronometro:disabled {
+    background-color: #16A34A;
+    cursor: default;
+}
+
+.cronometro-coaching strong {
+    color: #0066CC;
+    font-size: 21px;
+}
+
+.cronometro-coaching small {
+    color: #64748B;
+    font-size: 12px;
+}
+
+.cronometro-coaching p {
+    margin: 5px 0 0;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.cronometro-coaching.tiempo-agotado {
+    border-color: #EF4444;
+    background-color: #FEE2E2;
+    color: #991B1B;
+}
+
+.cronometro-coaching.tiempo-agotado strong,
+.cronometro-coaching.tiempo-agotado small {
+    color: #B91C1C;
+}
+
+.seccion-coaching {
+    margin-bottom: 22px;
+    overflow: hidden;
+    border: 1px solid #D7E0EA;
+    border-radius: 12px;
+    background-color: white;
+}
+
+.seccion-coaching summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 18px 22px;
+    background-color: #F8FAFC;
+    color: #0F172A;
+    cursor: pointer;
+    list-style: none;
+}
+
+.seccion-coaching summary::-webkit-details-marker {
+    display: none;
+}
+
+.seccion-coaching summary::after {
+    content: "+";
+    margin-left: auto;
+    color: #0066CC;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.seccion-coaching[open] summary::after {
+    content: "−";
+}
+
+.seccion-coaching summary span {
+    font-size: 19px;
+    font-weight: bold;
+}
+
+.seccion-coaching summary small {
+    color: #64748B;
+    font-size: 13px;
+    font-weight: normal;
+}
+
+.llamada-uno {
+    border-left: 4px solid #0066CC;
+}
+
+.llamada-dos {
+    border-left: 4px solid #F57C00;
+}
+
+.evaluacion-final {
+    border-color: #86EFAC;
+    background-color: #F0FDF4;
+}
+
+.evaluacion-final summary {
+    background-color: #ECFDF5;
+}
+
+.contenido-seccion-coaching {
+    padding: 24px;
+}
+
+.rejilla-coaching {
+    display: grid;
+    gap: 18px;
+}
+
+.rejilla-coaching.dos-columnas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rejilla-coaching.tres-columnas {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.aviso-coaching {
+    margin: 0 0 20px;
+    padding: 13px 15px;
+    border: 1px solid #93C5FD;
+    border-radius: 8px;
+    background-color: #EFF6FF;
+    color: #1E3A8A;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.aviso-verde {
+    border-color: #86EFAC;
+    background-color: #DCFCE7;
+    color: #166534;
+}
+
+.casilla-coaching {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin: 6px 0 20px;
+    padding: 14px 16px;
+    border: 1px solid #CBD5E1;
+    border-radius: 9px;
+    background-color: #F8FAFC;
+    color: #334155;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.casilla-coaching input {
+    width: auto;
+    margin: 0;
+    accent-color: #0066CC;
+}
+
+.casilla-coaching input:focus {
+    outline: none;
+}
+
+.casilla-coaching:has(input:focus-visible) {
+    outline: 2px solid #0066CC;
+    outline-offset: 2px;
+}
+
+.casilla-coaching:has(input:checked) {
+    border-color: #0066CC;
+    background-color: #EFF6FF;
+    color: #1D4ED8;
+}
+
+.evaluacion-comportamientos {
+    margin-top: 26px;
+}
+
+.evaluacion-comportamientos h4 {
+    margin: 0 0 15px;
+    color: #0F172A;
+    font-size: 17px;
+}
+
+.campo-opciones-coaching {
+    padding: 0;
+    border: 0;
+}
+
+.campo-opciones-coaching legend {
+    margin-bottom: 10px;
+    color: #334155;
+    font-weight: bold;
+}
+
+.resolucion-llamada {
+    margin-top: 22px;
+    padding: 14px 18px 18px;
+    border: 1px solid #CBD5E1;
+    border-radius: 9px;
+    background-color: #F8FAFC;
+    text-align: center;
+}
+
+.resolucion-llamada legend {
+    margin-right: auto;
+    margin-left: auto;
+    padding: 0 8px;
+    text-align: center;
+}
+
+.resolucion-llamada .opciones-comportamiento {
+    justify-content: center;
+}
+
+.titulo-resultado-kpi {
+    margin: 0 0 10px;
+    color: #334155;
+    font-size: 15px;
+}
+
+.resultado-mejora-kpi {
+    margin: 0;
+    padding: 15px 18px;
+    border: 1px solid;
+    border-radius: 9px;
+    font-weight: bold;
+}
+
+.resultado-mejora-kpi.pendiente {
+    border-color: #CBD5E1;
+    background-color: #F8FAFC;
+    color: #475569;
+}
+
+.resultado-mejora-kpi.mejora {
+    border-color: #86EFAC;
+    background-color: #DCFCE7;
+    color: #166534;
+}
+
+.resultado-mejora-kpi.sin-mejora {
+    border-color: #FCA5A5;
+    background-color: #FEE2E2;
+    color: #991B1B;
+}
+
+.campo-meta-siguiente {
+    margin-top: 18px;
+}
+
+.numero-manual {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.numero-manual::-webkit-inner-spin-button,
+.numero-manual::-webkit-outer-spin-button {
+    margin: 0;
+    appearance: none;
+}
+
+.lista-comportamientos {
+    display: grid;
+    gap: 10px;
+}
+
+.fila-comportamiento {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 13px 15px;
+    border: 1px solid #E2E8F0;
+    border-radius: 9px;
+    background-color: white;
+}
+
+.nombre-comportamiento {
+    color: #334155;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.opciones-comportamiento {
+    display: flex;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.opciones-comportamiento label {
+    display: flex;
+    min-width: 64px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border: 1px solid #CBD5E1;
+    border-radius: 7px;
+    background-color: #F8FAFC;
+    color: #475569;
+    cursor: pointer;
+}
+
+.opciones-comportamiento input {
+    width: auto;
+    margin: 0;
+    accent-color: #0066CC;
+}
+
+.opciones-comportamiento input:focus {
+    outline: none;
+}
+
+.opciones-comportamiento label:has(input:focus-visible) {
+    outline: 2px solid #0066CC;
+    outline-offset: 2px;
+}
+
+.opciones-comportamiento label:has(input:checked) {
+    border-color: #0066CC;
+    background-color: #DBEAFE;
+    color: #1D4ED8;
+    font-weight: bold;
+}
+
+.estado-comportamiento {
+    min-width: 88px;
+    padding: 7px 12px;
+    border-radius: 20px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.estado-comportamiento.pendiente {
+    background-color: #E2E8F0;
+    color: #475569;
+}
+
+.estado-comportamiento.cumple {
+    background-color: #DCFCE7;
+    color: #166534;
+}
+
+.estado-comportamiento.no-cumple {
+    background-color: #FEE2E2;
+    color: #991B1B;
+}
+
+.compromisos-coaching {
+    display: grid;
+    gap: 16px;
+}
+
+.zona-archivos-coaching {
+    display: flex;
+    min-height: 120px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px;
+    border: 2px dashed #94A3B8;
+    border-radius: 10px;
+    background-color: #F8FAFC;
+    color: #0066CC;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+}
+
+.zona-archivos-coaching:hover {
+    border-color: #0066CC;
+    background-color: #EFF6FF;
+}
+
+.zona-archivos-coaching small {
+    color: #64748B;
+    font-weight: normal;
+}
+
+#archivosCoaching {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.resumen-archivos {
+    margin: 10px 0 0;
+    color: #64748B;
+    font-size: 14px;
+}
+
+.acciones-coaching {
+    flex-wrap: wrap;
+}
+
+.boton-borrador {
+    cursor: pointer;
+}
+
 @media (max-width: 760px) {
     .dashboard,
     .cabecera-dashboard,
@@ -799,6 +1276,41 @@ body {
     }
 
     .tarjeta-perfil-agente {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .rejilla-coaching.dos-columnas,
+    .rejilla-coaching.tres-columnas {
+        grid-template-columns: 1fr;
+    }
+
+    .cabecera-coaching {
+        width: 100%;
+        display: flex;
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .fecha-inicio-coaching {
+        width: 100%;
+    }
+
+    .cronometro-coaching {
+        width: 100%;
+    }
+
+    .seccion-coaching summary {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .seccion-coaching summary::after {
+        position: absolute;
+        align-self: flex-end;
+    }
+
+    .fila-comportamiento {
         align-items: flex-start;
         flex-direction: column;
     }

@@ -45,6 +45,15 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
+        if (tipoSesion === "Coaching") {
+            const destino = new URL("formulario-coaching.html", window.location.href);
+            destino.searchParams.set("agente", agenteId);
+            destino.searchParams.set("tipo", tipoSesion);
+            destino.searchParams.set("inicio", campoFechaHoraInicio.value);
+            window.location.href = destino.toString();
+            return;
+        }
+
         if (tipoSesion === "Accountability" || tipoSesion === "Verbal Warning") {
             const destino = new URL("formulario-correctivo.html", window.location.href);
             destino.searchParams.set("agente", agenteId);
