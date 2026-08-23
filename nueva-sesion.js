@@ -35,6 +35,25 @@ document.addEventListener("DOMContentLoaded", function () {
         evento.preventDefault();
 
         const tipoSesion = document.getElementById("tipoSesion").value;
+
+        if (tipoSesion === "ITGF") {
+            const destino = new URL("formulario-itgf.html", window.location.href);
+            destino.searchParams.set("agente", agenteId);
+            destino.searchParams.set("tipo", tipoSesion);
+            destino.searchParams.set("inicio", campoFechaHoraInicio.value);
+            window.location.href = destino.toString();
+            return;
+        }
+
+        if (tipoSesion === "Accountability" || tipoSesion === "Verbal Warning") {
+            const destino = new URL("formulario-correctivo.html", window.location.href);
+            destino.searchParams.set("agente", agenteId);
+            destino.searchParams.set("tipo", tipoSesion);
+            destino.searchParams.set("inicio", campoFechaHoraInicio.value);
+            window.location.href = destino.toString();
+            return;
+        }
+
         window.alert(`El formulario de ${tipoSesion} se agregará en el siguiente bloque.`);
     });
 });

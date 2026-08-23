@@ -582,16 +582,32 @@ body {
 /* DETALLE DEL AGENTE */
 
 .enlace-volver {
-    display: inline-block;
-    margin-bottom: 12px;
-    color: #0066CC;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 9px 14px;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    background-color: white;
+    color: #334155;
     font-size: 14px;
     font-weight: bold;
     text-decoration: none;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .enlace-volver:hover {
-    text-decoration: underline;
+    border-color: #0066CC;
+    background-color: #EFF6FF;
+    color: #0066CC;
+    transform: translateX(-2px);
+}
+
+.enlace-volver:focus-visible {
+    outline: 3px solid rgba(0, 102, 204, 0.25);
+    outline-offset: 2px;
 }
 
 .tarjeta-perfil-agente {
@@ -661,6 +677,100 @@ body {
     color: #166534;
     font-size: 13px;
     font-weight: bold;
+}
+
+/* FORMULARIO CORRECTIVO */
+
+.tarjeta-correctiva {
+    max-width: 1100px;
+}
+
+.campo-pregunta {
+    padding: 20px;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    background-color: #F8FAFC;
+}
+
+.campo-pregunta label {
+    color: #0F172A;
+    line-height: 1.45;
+}
+
+.campo-pregunta textarea {
+    background-color: white;
+}
+
+/* FORMULARIO ITGF */
+
+.tarjeta-itgf {
+    max-width: 1100px;
+}
+
+.seccion-formulario-itgf {
+    margin-bottom: 24px;
+    padding: 24px;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    background-color: white;
+}
+
+.seccion-formulario-itgf h4 {
+    margin: 0 0 22px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #E2E8F0;
+    color: #0F172A;
+    font-size: 19px;
+}
+
+.campo-opciones-itgf {
+    padding: 0;
+    border: 0;
+}
+
+.campo-opciones-itgf legend {
+    margin-bottom: 10px;
+    color: #334155;
+    font-weight: bold;
+}
+
+.opciones-itgf {
+    display: flex;
+    gap: 12px;
+}
+
+.opciones-itgf label {
+    display: flex;
+    min-width: 90px;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 11px 16px;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    background-color: #F8FAFC;
+    cursor: pointer;
+}
+
+.opciones-itgf input {
+    width: auto;
+    margin: 0;
+    accent-color: #0066CC;
+}
+
+.opciones-itgf input:focus {
+    outline: none;
+}
+
+.opciones-itgf label:has(input:focus-visible) {
+    outline: 2px solid #0066CC;
+    outline-offset: 2px;
+}
+
+.opciones-itgf label:has(input:checked) {
+    border-color: #0066CC;
+    background-color: #DBEAFE;
+    color: #1D4ED8;
 }
 
 @media (max-width: 760px) {
