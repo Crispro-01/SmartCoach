@@ -1,0 +1,15 @@
+{
+  "name": "smart-coach-backend",
+  "version": "1.0.0",
+  "description": "API para gestionar agentes y sesiones de Smart Coach",
+  "main": "src/app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js"
+  },
+  "private": true,
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
