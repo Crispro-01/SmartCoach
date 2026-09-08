@@ -1,16 +1,13 @@
 import express from "express";
+import rutasEstado from "./routes/estado.routes.js";
+import rutasAgentes from "./routes/agentes.routes.js";
 
 const app = express();
 const PUERTO = 3000;
 
 app.use(express.json());
-
-app.get("/api/salud", function (solicitud, respuesta) {
-    respuesta.json({
-        estado: "ok",
-        mensaje: "API de Smart Coach funcionando"
-    });
-});
+app.use("/api/estado", rutasEstado);
+app.use("/api/agentes", rutasAgentes);
 
 app.listen(PUERTO, function () {
     console.log(`Servidor de Smart Coach disponible en http://localhost:${PUERTO}`);
