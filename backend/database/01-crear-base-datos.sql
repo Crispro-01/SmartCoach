@@ -380,16 +380,17 @@ CREATE TABLE IF NOT EXISTS coaching_adjuntos (
 
 START TRANSACTION;
 
-INSERT INTO roles (rol_id, nombre, nivel) VALUES
-    (1, 'Director', 1),
-    (2, 'Senior Account Manager', 2),
-    (3, 'Account Manager', 3),
-    (4, 'Manager', 4),
-    (5, 'Coach', 5),
-    (6, 'Agente', 6)
-ON DUPLICATE KEY UPDATE
-    nombre = VALUES(nombre),
-    nivel = VALUES(nivel);
+-- El nivel 1 corresponde a Agente y el 6 a Director.
+-- En bases ya creadas con el orden anterior, ejecutar primero
+-- 02-invertir-niveles-roles.sql. IGNORE evita alterar roles existentes
+-- por coincidencias temporales en la columna nivel.
+INSERT IGNORE INTO roles (rol_id, nombre, nivel) VALUES
+    (1, 'Director', 6),
+    (2, 'Senior Account Manager', 5),
+    (3, 'Account Manager', 4),
+    (4, 'Manager', 3),
+    (5, 'Coach', 2),
+    (6, 'Agente', 1);
 
 INSERT INTO tipos_sesion (tipo_sesion_id, codigo, nombre) VALUES
     (1, 'COACHING', 'Coaching'),
