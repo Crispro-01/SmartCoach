@@ -14,6 +14,7 @@
 
     <link rel="stylesheet" href="estilos.css">
     <script src="menu.js" defer></script>
+    <script src="agentes.js" defer></script>
 </head>
 
 <body>
@@ -72,68 +73,8 @@
                         </tr>
                     </thead>
 
-                    <tbody>
-
-                        <tr>
-                            <td>Laura Gómez</td>
-                            <td>TM001</td>
-                            <td>08/08/2026</td>
-                            <td>
-                                <span class="tipo-sesion coaching">Coaching</span>
-                            </td>
-                            <td>
-                                <a href="detalle-agente.html?id=TM001" class="enlace-agente">Ver agente</a>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>Juan Pérez</td>
-                            <td>TM002</td>
-                            <td>06/08/2026</td>
-                            <td>
-                                <span class="tipo-sesion itgf">ITGF</span>
-                            </td>
-                            <td>
-                                <a href="detalle-agente.html?id=TM002" class="enlace-agente">Ver agente</a>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>Daniela Ruiz</td>
-                            <td>TM003</td>
-                            <td>05/08/2026</td>
-                            <td>
-                                <span class="tipo-sesion accountability">Accountability</span>
-                            </td>
-                            <td>
-                                <a href="detalle-agente.html?id=TM003" class="enlace-agente">Ver agente</a>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>Andrés Torres</td>
-                            <td>TM004</td>
-                            <td>04/08/2026</td>
-                            <td>
-                                <span class="tipo-sesion huddle">Huddle</span>
-                            </td>
-                            <td>
-                                <a href="detalle-agente.html?id=TM004" class="enlace-agente">Ver agente</a>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>Camila Rodríguez</td>
-                            <td>TM005</td>
-                            <td>01/08/2026</td>
-                            <td>
-                                <span class="tipo-sesion verbal-warning">Verbal Warning</span>
-                            </td>
-                            <td>
-                                <a href="detalle-agente.html?id=TM005" class="enlace-agente">Ver agente</a>
-                            </td>
-                        </tr>
-
+                    <tbody id="listaAgentes">
+                        <tr><td colspan="5">Cargando agentes…</td></tr>
                     </tbody>
 
                 </table>

@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
     const agentes = {
         TM001: "Laura Gómez",
         TM002: "Juan Pérez",
@@ -7,75 +7,10 @@ document.addEventListener("DOMContentLoaded", function () {
         TM005: "Camila Rodríguez"
     };
 
-    const comportamientos = [
-        { clave: "properGreeting", nombre: "Buen saludo" },
-        { clave: "accountVerification", nombre: "Verificación de la cuenta" },
-        { clave: "paraphraseNeed", nombre: "Parafrasear la necesidad del cliente" },
-        { clave: "ensureHelp", nombre: "Asegurar ayuda" },
-        { clave: "verbalizeAudit", nombre: "Verbalizar la auditoría visual" },
-        { clave: "relevantQuestions", nombre: "Preguntas de sondeo relevantes" },
-        { clave: "toolsUsage", nombre: "Uso de herramientas" },
-        { clave: "resolution", nombre: "Resolución" },
-        { clave: "documentation", nombre: "Dejar documentación dentro de la cuenta" },
-        { clave: "selfHelpPromotion", nombre: "Promover opciones de autoayuda" },
-        { clave: "recapitulation", nombre: "Recapitulación" },
-        { clave: "offerProducts", nombre: "Ofrecer productos o servicios adecuados" },
-        { clave: "adjacentProblems", nombre: "Preguntar por problemas adyacentes" },
-        { clave: "thankCustomer", nombre: "Agradecer al cliente y cerrar la llamada" }
-    ];
-
-    const categoriasCallDriver = [
-        {
-            nombre: "Facturación y pagos",
-            opciones: [
-                "Cobros no reconocidos / Factura alta",
-                "Acuerdos de pago (Payment arrangements)",
-                "Pagos rechazados o no aplicados",
-                "Consulta de saldo / Estado de cuenta",
-                "Ajustes de factura"
-            ]
-        },
-        {
-            nombre: "Soporte técnico",
-            opciones: [
-                "Sin servicio (No service)",
-                "Reseteo de credenciales",
-                "Troubleshooting / Configuración",
-                "Problemas de conectividad",
-                "Problemas con el equipo"
-            ]
-        },
-        {
-            nombre: "Retención y gestión de cuenta",
-            opciones: [
-                "Cancelación de servicio (Disconnect)",
-                "Cambio de titularidad (Transfer of Responsibility)",
-                "Cambio de domicilio (Move order)",
-                "Suspensión temporal de servicio",
-                "Reactivación de cuenta"
-            ]
-        },
-        {
-            nombre: "Ventas y mejoras",
-            opciones: [
-                "Upgrade de equipo / plan",
-                "Agregar líneas (Add-a-line)",
-                "Consulta de promociones",
-                "Contratación de servicios adicionales",
-                "Cambio de plan"
-            ]
-        },
-        {
-            nombre: "Logística e información",
-            opciones: [
-                "WISMO (Where Is My Order?)",
-                "Garantías / Devoluciones (RMA)",
-                "Consulta general de servicios",
-                "Seguimiento de orden",
-                "Información de cuenta"
-            ]
-        }
-    ];
+    let comportamientos = [];
+    let categoriasCallDriver = [];
+    let kpis = [];
+    let tiposSeguimiento = [];
 
     const parametros = new URLSearchParams(window.location.search);
     const agenteId = parametros.get("agente");
@@ -86,6 +21,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!agenteNombre || tipoSesion !== "Coaching" || !fechaHoraInicio) {
         window.location.href = "agentes.html";
+        return;
+    }
+
+    try {
+        const respuestaCatalogos = await fetch("http://localhost:3000/api/catalogos/coaching");
+        const resultadoCatalogos = await respuestaCatalogos.json();
+
+        if (!respuestaCatalogos.ok || resultadoCatalogos.estado !== "ok") {
+            throw new Error(resultadoCatalogos.mensaje || "No se pudieron cargar los catálogos.");
+        }
+
+        comportamientos = resultadoCatalogos.datos.comportamientos;
+        categoriasCallDriver = resultadoCatalogos.datos.categoriasCallDriver;
+        kpis = resultadoCatalogos.datos.kpis;
+        tiposSeguimiento = resultadoCatalogos.datos.tiposSeguimiento;
+    } catch (error) {
+        console.error("Error al cargar los catálogos de Coaching:", error.message);
+        window.alert("No se pudieron cargar las opciones de Coaching. Verifica que el backend esté iniciado e inténtalo de nuevo.");
         return;
     }
 
@@ -162,8 +115,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             categoria.opciones.forEach(function (callDriver) {
                 const opcion = document.createElement("option");
-                opcion.value = callDriver;
-                opcion.textContent = callDriver;
+                opcion.value = callDriver.id.toString();
+                opcion.textContent = callDriver.nombre;
                 grupo.appendChild(opcion);
             });
 
@@ -173,6 +126,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
     cargarCallDrivers(document.getElementById("callDriver1"));
     cargarCallDrivers(document.getElementById("callDriver2"));
+
+    function cargarKpis(selector) {
+        kpis.forEach(function (kpi) {
+            const opcion = document.createElement("option");
+            opcion.value = kpi.id.toString();
+            opcion.textContent = kpi.nombre;
+            selector.appendChild(opcion);
+        });
+    }
+
+    cargarKpis(document.getElementById("nombreKpi"));
+
+    function cargarTiposSeguimiento(selector) {
+        tiposSeguimiento.forEach(function (tipo) {
+            const opcion = document.createElement("option");
+            opcion.value = tipo.id.toString();
+            opcion.textContent = tipo.nombre;
+            selector.appendChild(opcion);
+        });
+    }
+
+    cargarTiposSeguimiento(document.getElementById("tipoSeguimientoCoaching"));
 
     function cargarComportamientos(selector) {
         comportamientos.forEach(function (comportamiento) {
@@ -350,7 +325,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const esSeguimiento = aperturaComportamiento.value === "No";
 
         if (esApertura) {
-            tipoSeguimiento.value = "Constructivo";
+            const tipoConstructivo = tiposSeguimiento.find(function (tipo) {
+                return tipo.nombre === "Constructivo";
+            });
+            tipoSeguimiento.value = tipoConstructivo ? tipoConstructivo.id.toString() : "";
             numeroSesion.value = "1";
         }
 
