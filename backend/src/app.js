@@ -3,6 +3,7 @@ import { configuracion } from "./config/env.js";
 import rutasEstado from "./routes/estado.routes.js";
 import rutasAgentes from "./routes/agentes.routes.js";
 import rutasCatalogos from "./routes/catalogos.routes.js";
+import rutasCoaching from "./routes/coaching.routes.js";
 
 const app = express();
 
@@ -14,7 +15,7 @@ app.use(function (solicitud, respuesta, siguiente) {
     if (origenLocal) {
         respuesta.setHeader("Access-Control-Allow-Origin", origen);
         respuesta.setHeader("Vary", "Origin");
-        respuesta.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+        respuesta.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
         respuesta.setHeader("Access-Control-Allow-Headers", "Content-Type");
     }
 
@@ -29,6 +30,7 @@ app.use(express.json());
 app.use("/api/estado", rutasEstado);
 app.use("/api/agentes", rutasAgentes);
 app.use("/api/catalogos", rutasCatalogos);
+app.use("/api/sesiones", rutasCoaching);
 
 app.listen(configuracion.puerto, function () {
     console.log(`Servidor de Smart Coach disponible en http://localhost:${configuracion.puerto}`);

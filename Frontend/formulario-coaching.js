@@ -366,7 +366,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     document.getElementById("guardarBorradorCoaching").addEventListener("click", function () {
         sincronizarDetalleCoaching();
-        window.alert("El borrador de Coaching está listo para guardarse en el backend.");
+        window.alert("El guardado de borradores todavía no está habilitado. No se guardó nada en MySQL; usa Completar sesión cuando el formulario esté listo.");
     });
 
     let validacionEnCurso = false;
@@ -388,7 +388,81 @@ document.addEventListener("DOMContentLoaded", async function () {
         }, 0);
     }, true);
 
-    formularioCoaching.addEventListener("submit", function (evento) {
+    function construirPayloadCoaching() {
+        const obtenerTexto = function (nombre) {
+            return formularioCoaching.elements.namedItem(nombre).value.trim();
+        };
+        const llamadas = [1, 2].map(function (numero) {
+            const prefijo = "call" + numero;
+            const resolucion = formularioCoaching.querySelector('input[name="resolution' + numero + '"]:checked');
+            return {
+                number: numero,
+                contactId: document.getElementById("contactId" + numero).value.trim(),
+                callDriverId: document.getElementById("callDriver" + numero).value,
+                summary: document.getElementById("resumenLlamada" + numero).value.trim(),
+                resolved: resolucion ? resolucion.value === "Sí" : null,
+                evaluations: comportamientos.map(function (comportamiento) {
+                    const respuesta = formularioCoaching.querySelector(
+                        'input[name="' + prefijo + "_" + comportamiento.clave + '"]:checked'
+                    );
+                    return {
+                        behaviorId: comportamiento.id,
+                        fulfilled: respuesta ? respuesta.value === "Sí" : null
+                    };
+                })
+            };
+        });
+        const comportamientoTrabajado = comportamientos.find(function (comportamiento) {
+            return comportamiento.clave === document.getElementById("comportamientoTrabajadoCoaching").value;
+        });
+
+        return {
+            agentId: obtenerTexto("agenteId"),
+            opening: aperturaComportamiento.value === "Sí",
+            followUpTypeId: tipoSeguimientoValor.value,
+            sessionNumber: numeroSesionValor.value,
+            behaviorWorkedId: comportamientoTrabajado ? comportamientoTrabajado.id : "",
+            calls: llamadas,
+            kpi: {
+                kpiId: obtenerTexto("kpiName"),
+                resultMtd: obtenerTexto("kpiResultMTD"),
+                previousGoal: obtenerTexto("previousCoachingGoal"),
+                currentResult: obtenerTexto("kpiCurrentResult"),
+                nextGoal: obtenerTexto("kpiGoalNextWeek")
+            },
+            commitments: {
+                coach: {
+                    what: obtenerTexto("coachCommitmentWhat"),
+                    how: obtenerTexto("coachCommitmentHow"),
+                    when: obtenerTexto("coachCommitmentWhen"),
+                    recognition: obtenerTexto("coachCommitmentRecognition")
+                },
+                agent: {
+                    what: obtenerTexto("csrCommitmentWhat"),
+                    how: obtenerTexto("csrCommitmentHow"),
+                    when: obtenerTexto("csrCommitmentWhen"),
+                    evaluation: obtenerTexto("csrCommitmentEvaluation"),
+                    recognition: obtenerTexto("csrCommitmentRecognition")
+                }
+            },
+            rca: {
+                activity: obtenerTexto("rcaActivity"),
+                closingBehavior: document.getElementById("cierreComportamiento").checked,
+                callsWithBehavior: obtenerTexto("rcaCallsWithBehavior"),
+                trendLast3Weeks: obtenerTexto("rcaTrendLast3Weeks"),
+                reasonNotPerformed: obtenerTexto("rcaReasonNotPerformed"),
+                activityToOvercome: obtenerTexto("rcaActivityToOvercome"),
+                whyContinue: obtenerTexto("rcaWhyContinue"),
+                roleplayResult: obtenerTexto("rcaRoleplayResult"),
+                currentAttainment: obtenerTexto("rcaCurrentAttainment"),
+                kpiChange: obtenerTexto("rcaKpiChange"),
+                behaviorChange: obtenerTexto("rcaBehaviorChange")
+            },
+            durationSeconds: duracionCoachingSegundos.value || null
+        };
+    }
+
+    formularioCoaching.addEventListener("submit", async function (evento) {
         evento.preventDefault();
         sincronizarDetalleCoaching();
 
@@ -405,6 +479,35 @@ document.addEventListener("DOMContentLoaded", async function () {
             return;
         }
 
-        window.alert("La sesión de Coaching GROW está lista para enviarse al backend.");
+        if (archivosCoaching.files.length > 0) {
+            window.alert("El guardado de adjuntos todavía no está habilitado. Quita los archivos seleccionados antes de completar esta sesión.");
+            return;
+        }
+
+        const botonCompletar = document.getElementById("completarCoaching");
+        botonCompletar.disabled = true;
+        botonCompletar.textContent = "Guardando…";
+
+        try {
+            const respuesta = await fetch("http://localhost:3000/api/sesiones/coaching", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(construirPayloadCoaching())
+            });
+            const resultado = await respuesta.json();
+            if (!respuesta.ok || resultado.estado !== "ok") {
+                throw new Error(resultado.mensaje || "No se pudo guardar la sesión.");
+            }
+
+            window.localStorage.removeItem(claveInicioCronometro);
+            window.alert("Sesión de Coaching #" + resultado.datos.sesionId + " guardada y completada.");
+            window.location.href = "detalle-agente.html?id=" + encodeURIComponent(agenteId);
+        } catch (error) {
+            console.error("No se pudo guardar la sesión de Coaching:", error);
+            window.alert(error.message || "No se pudo guardar la sesión. Verifica que el backend siga iniciado.");
+        } finally {
+            botonCompletar.disabled = false;
+            botonCompletar.textContent = "Completar sesión";
+        }
     });
 });
