@@ -152,8 +152,8 @@ export async function crearSesionCoaching(solicitud, respuesta) {
             "INNER JOIN usuarios c ON c.employee_id = a.supervisor_id " +
             "INNER JOIN roles rc ON rc.rol_id = c.rol_id " +
             "WHERE a.employee_id = ? AND a.activo = TRUE AND ra.nombre = 'Agente' " +
-            "AND c.activo = TRUE AND rc.nombre = 'Coach'",
-            [texto(solicitud.body?.agentId, "agente", 32)]
+            "AND c.activo = TRUE AND rc.nombre = 'Coach' AND c.employee_id = ?",
+            [texto(solicitud.body?.agentId, "agente", 32), solicitud.usuario.employeeId]
         );
         if (!agentes.length) {
             throw new ErrorSolicitud("El agente no está activo o no tiene un Coach asignado.", 404);

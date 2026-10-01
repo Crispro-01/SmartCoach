@@ -1,4 +1,4 @@
-const URL_API_AGENTE = "http://localhost:3000/api/agentes";
+const URL_API_AGENTE = `http://${window.location.hostname}:3000/api/agentes`;
 
 function crearCelda(texto) {
     const celda = document.createElement("td");
@@ -75,7 +75,9 @@ async function cargarDetalleAgente() {
     }
 
     try {
-        const respuesta = await fetch(`${URL_API_AGENTE}/${encodeURIComponent(agenteId)}`);
+        const respuesta = await fetch(`${URL_API_AGENTE}/${encodeURIComponent(agenteId)}`, {
+            credentials: "include"
+        });
 
         if (respuesta.status === 404) {
             window.location.href = "agentes.html";
