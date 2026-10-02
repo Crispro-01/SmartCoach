@@ -1,5 +1,3 @@
-const URL_API_BASE = `http://${window.location.hostname}:3000/api`;
-
 document.addEventListener("DOMContentLoaded", async function () {
     const agentes = {
         TM001: "Laura Gómez",
@@ -27,9 +25,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     try {
-        const respuestaCatalogos = await fetch(`${URL_API_BASE}/catalogos/coaching`, {
-            credentials: "include"
-        });
+        const respuestaCatalogos = await fetch("http://localhost:3000/api/catalogos/coaching");
         const resultadoCatalogos = await respuestaCatalogos.json();
 
         if (!respuestaCatalogos.ok || resultadoCatalogos.estado !== "ok") {
@@ -493,9 +489,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         botonCompletar.textContent = "Guardando…";
 
         try {
-            const respuesta = await fetch(`${URL_API_BASE}/sesiones/coaching`, {
+            const respuesta = await fetch("http://localhost:3000/api/sesiones/coaching", {
                 method: "POST",
-                credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(construirPayloadCoaching())
             });
