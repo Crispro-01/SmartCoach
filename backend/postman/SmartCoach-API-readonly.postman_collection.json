@@ -1,0 +1,87 @@
+{
+  "info": {
+    "_postman_id": "fe74781e-1426-4cec-a027-994c78d2d42f",
+    "name": "Smart Coach API - solo lectura",
+    "description": "Pruebas GET seguras para la evidencia GA7-220501096-AA5-EV02. No crea, edita ni elimina datos. Base URL predeterminada: http://localhost:3000.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "agentId", "value": "TM001" }
+  ],
+  "item": [
+    {
+      "name": "1. Estado de la API",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/estado", "host": ["{{baseUrl}}"], "path": ["api", "estado"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('Responde HTTP 200', function () { pm.response.to.have.status(200); });",
+            "pm.test('Confirma que la API funciona', function () { pm.expect(pm.response.json().estado).to.eql('ok'); });"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "2. Listar agentes activos y sesiones",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/agentes", "host": ["{{baseUrl}}"], "path": ["api", "agentes"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('Responde HTTP 200', function () { pm.response.to.have.status(200); });",
+            "pm.test('Devuelve el total y la lista de agentes', function () { var body = pm.response.json(); pm.expect(body.total).to.be.a('number'); pm.expect(body.datos).to.be.an('array'); });"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "3. Consultar el perfil de un agente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/agentes/{{agentId}}", "host": ["{{baseUrl}}"], "path": ["api", "agentes", "{{agentId}}"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('Agente encontrado', function () { pm.response.to.have.status(200); });",
+            "pm.test('Respuesta identifica al agente consultado', function () { var body = pm.response.json(); pm.expect(body.estado).to.eql('ok'); pm.expect(body.datos.id).to.eql(pm.collectionVariables.get('agentId')); });"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "4. Consultar catálogos de Coaching",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/catalogos/coaching", "host": ["{{baseUrl}}"], "path": ["api", "catalogos", "coaching"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('Responde HTTP 200', function () { pm.response.to.have.status(200); });",
+            "pm.test('Incluye comportamientos, Call Drivers, KPIs y seguimientos', function () { var body = pm.response.json(); pm.expect(body.estado).to.eql('ok'); pm.expect(body.datos.comportamientos).to.be.an('array').and.not.empty; pm.expect(body.datos.categoriasCallDriver).to.be.an('array').and.not.empty; pm.expect(body.datos.kpis).to.be.an('array').and.not.empty; pm.expect(body.datos.tiposSeguimiento).to.be.an('array').and.not.empty; });",
+            "pm.test('Incluye los 14 comportamientos esperados en este entorno', function () { pm.expect(pm.response.json().datos.comportamientos).to.have.lengthOf(14); });"
+          ]
+        }
+      }]
+    }
+  ]
+}
