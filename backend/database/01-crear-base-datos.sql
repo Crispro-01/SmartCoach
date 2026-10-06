@@ -135,6 +135,7 @@ CREATE TABLE IF NOT EXISTS sesiones (
     coach_id VARCHAR(32) NOT NULL,
     tipo_sesion_id TINYINT UNSIGNED NOT NULL,
     estado_sesion_id TINYINT UNSIGNED NOT NULL,
+    borrador_json JSON NULL,
     tema VARCHAR(255) NULL,
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     inicio_cronometro DATETIME NULL,
