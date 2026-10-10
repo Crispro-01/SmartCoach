@@ -16,10 +16,11 @@ document.addEventListener("DOMContentLoaded", async function () {
     const agenteId = parametros.get("agente");
     const tipoSesion = parametros.get("tipo");
     const fechaHoraInicio = parametros.get("inicio");
+    let borradorId = parametros.get("borrador");
     const agenteNombre = agentes[agenteId];
     const formularioCoaching = document.getElementById("formularioCoaching");
 
-    if (!agenteNombre || tipoSesion !== "Coaching" || !fechaHoraInicio) {
+    if (!agenteNombre || tipoSesion !== "Coaching" || (!fechaHoraInicio && !borradorId)) {
         window.location.href = "agentes.html";
         return;
     }
@@ -44,7 +45,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     document.getElementById("agenteCoaching").value = `${agenteNombre} — ${agenteId}`;
     document.getElementById("agenteIdCoaching").value = agenteId;
-    document.getElementById("fechaHoraInicioCoaching").value = fechaHoraInicio;
+    document.getElementById("fechaHoraInicioCoaching").value = fechaHoraInicio || "";
     document.getElementById("volverAgente").href = `detalle-agente.html?id=${agenteId}`;
     document.getElementById("cancelarFormularioCoaching").href = `nueva-sesion.html?agente=${agenteId}`;
 
@@ -53,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const alertaTiempoCoaching = document.getElementById("alertaTiempoCoaching");
     const duracionCoachingSegundos = document.getElementById("duracionCoachingSegundos");
     const botonIniciarCronometro = document.getElementById("iniciarCronometroCoaching");
-    const claveInicioCronometro = `smartCoach:inicioCoaching:${agenteId}:${fechaHoraInicio}`;
+    let claveInicioCronometro = `smartCoach:inicioCoaching:${agenteId}:${borradorId || fechaHoraInicio}`;
     let inicioCoaching = null;
     let intervaloCronometro = null;
     const limiteCoachingSegundos = 20 * 60;
@@ -364,9 +365,48 @@ document.addEventListener("DOMContentLoaded", async function () {
             : `${cantidad} archivo${cantidad === 1 ? "" : "s"} seleccionado${cantidad === 1 ? "" : "s"}.`;
     });
 
-    document.getElementById("guardarBorradorCoaching").addEventListener("click", function () {
+    document.getElementById("guardarBorradorCoaching").addEventListener("click", async function () {
         sincronizarDetalleCoaching();
-        window.alert("El guardado de borradores todavía no está habilitado. No se guardó nada en MySQL; usa Completar sesión cuando el formulario esté listo.");
+        if (archivosCoaching.files.length > 0) {
+            window.alert("Los adjuntos todavía no se guardan. Quita los archivos seleccionados antes de guardar el borrador.");
+            return;
+        }
+
+        const boton = document.getElementById("guardarBorradorCoaching");
+        boton.disabled = true;
+        try {
+            const respuesta = await fetch(
+                borradorId
+                    ? `http://localhost:3000/api/sesiones/coaching/borradores/${encodeURIComponent(borradorId)}`
+                    : "http://localhost:3000/api/sesiones/coaching/borradores",
+                {
+                    method: borradorId ? "PUT" : "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(construirPayloadCoaching())
+                }
+            );
+            const resultado = await respuesta.json();
+            if (!respuesta.ok || resultado.estado !== "ok") {
+                throw new Error(resultado.mensaje || "No se pudo guardar el borrador.");
+            }
+
+            if (!borradorId) {
+                const claveAnterior = claveInicioCronometro;
+                borradorId = resultado.datos.sesionId;
+                claveInicioCronometro = `smartCoach:inicioCoaching:${agenteId}:${borradorId}`;
+                const inicioAnterior = window.localStorage.getItem(claveAnterior);
+                if (inicioAnterior) window.localStorage.setItem(claveInicioCronometro, inicioAnterior);
+                window.localStorage.removeItem(claveAnterior);
+                parametros.set("borrador", borradorId);
+                window.history.replaceState(null, "", `${window.location.pathname}?${parametros.toString()}`);
+            }
+            window.alert(`Borrador #${borradorId} guardado. Puedes volver a abrirlo desde el perfil del agente.`);
+        } catch (error) {
+            console.error("No se pudo guardar el borrador:", error);
+            window.alert(error.message || "No se pudo guardar el borrador. Verifica que el backend siga iniciado.");
+        } finally {
+            boton.disabled = false;
+        }
     });
 
     let validacionEnCurso = false;
@@ -418,7 +458,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         return {
             agentId: obtenerTexto("agenteId"),
-            opening: aperturaComportamiento.value === "Sí",
+            startedAt: document.getElementById("fechaHoraInicioCoaching").value,
+            opening: aperturaComportamiento.value === "" ? null : aperturaComportamiento.value === "Sí",
             followUpTypeId: tipoSeguimientoValor.value,
             sessionNumber: numeroSesionValor.value,
             behaviorWorkedId: comportamientoTrabajado ? comportamientoTrabajado.id : "",
@@ -462,6 +503,111 @@ document.addEventListener("DOMContentLoaded", async function () {
         };
     }
 
+    function restaurarBorrador(contenido) {
+        if (!contenido || contenido.agentId !== agenteId) {
+            throw new Error("El borrador no corresponde a este agente.");
+        }
+
+        const poner = function (nombre, valor) {
+            const campo = formularioCoaching.elements.namedItem(nombre);
+            if (campo) campo.value = valor ?? "";
+        };
+        const marcarRadio = function (nombre, valor) {
+            if (typeof valor !== "boolean") return;
+            const radio = Array.from(formularioCoaching.querySelectorAll('input[type="radio"]')).find(function (opcion) {
+                return opcion.name === nombre && opcion.value === (valor ? "Sí" : "No");
+            });
+            if (radio) radio.checked = true;
+        };
+
+        poner("fechaHoraInicio", contenido.startedAt);
+        aperturaComportamiento.value = contenido.opening === null ? "" : contenido.opening ? "Sí" : "No";
+        tipoSeguimiento.value = contenido.followUpTypeId ?? "";
+        numeroSesion.value = contenido.sessionNumber ?? "";
+
+        (contenido.calls || []).forEach(function (llamada) {
+            const numero = Number(llamada.number);
+            if (numero !== 1 && numero !== 2) return;
+            poner(`contactId${numero}`, llamada.contactId);
+            poner(`callDriver${numero}`, llamada.callDriverId);
+            poner(`call${numero}Summary`, llamada.summary);
+            marcarRadio(`resolution${numero}`, llamada.resolved);
+            (llamada.evaluations || []).forEach(function (evaluacion) {
+                const comportamiento = comportamientos.find(function (item) {
+                    return Number(item.id) === Number(evaluacion.behaviorId);
+                });
+                if (comportamiento) {
+                    marcarRadio(`call${numero}_${comportamiento.clave}`, evaluacion.fulfilled);
+                }
+            });
+        });
+
+        const kpi = contenido.kpi || {};
+        poner("kpiName", kpi.kpiId);
+        poner("kpiResultMTD", kpi.resultMtd);
+        poner("previousCoachingGoal", kpi.previousGoal);
+        poner("kpiCurrentResult", kpi.currentResult);
+        poner("kpiGoalNextWeek", kpi.nextGoal);
+
+        const comportamiento = comportamientos.find(function (item) {
+            return Number(item.id) === Number(contenido.behaviorWorkedId);
+        });
+        comportamientoTrabajado.value = comportamiento ? comportamiento.clave : "";
+
+        const compromisos = contenido.commitments || {};
+        const coach = compromisos.coach || {};
+        const agente = compromisos.agent || {};
+        poner("coachCommitmentWhat", coach.what);
+        poner("coachCommitmentHow", coach.how);
+        poner("coachCommitmentWhen", coach.when);
+        poner("coachCommitmentRecognition", coach.recognition);
+        poner("csrCommitmentWhat", agente.what);
+        poner("csrCommitmentHow", agente.how);
+        poner("csrCommitmentWhen", agente.when);
+        poner("csrCommitmentEvaluation", agente.evaluation);
+        poner("csrCommitmentRecognition", agente.recognition);
+
+        const rca = contenido.rca || {};
+        poner("rcaActivity", rca.activity);
+        document.getElementById("cierreComportamiento").checked = rca.closingBehavior === true;
+        poner("rcaCallsWithBehavior", rca.callsWithBehavior);
+        poner("rcaTrendLast3Weeks", rca.trendLast3Weeks);
+        poner("rcaReasonNotPerformed", rca.reasonNotPerformed);
+        poner("rcaActivityToOvercome", rca.activityToOvercome);
+        poner("rcaWhyContinue", rca.whyContinue);
+        poner("rcaRoleplayResult", rca.roleplayResult);
+        poner("rcaCurrentAttainment", rca.currentAttainment);
+        poner("rcaKpiChange", rca.kpiChange);
+        poner("rcaBehaviorChange", rca.behaviorChange);
+
+        if (inicioCoaching === null && Number.isFinite(Number(contenido.durationSeconds))) {
+            const segundos = Math.max(0, Number(contenido.durationSeconds));
+            duracionCoachingSegundos.value = String(segundos);
+            tiempoCoaching.textContent = formatearTiempo(segundos);
+        }
+        sincronizarDetalleCoaching();
+        comportamientos.forEach(function (item) { actualizarResultadoFinal(item.clave); });
+        actualizarComportamientoTrabajado();
+    }
+
+    if (borradorId) {
+        try {
+            const respuesta = await fetch(
+                `http://localhost:3000/api/sesiones/coaching/borradores/${encodeURIComponent(borradorId)}?agenteId=${encodeURIComponent(agenteId)}`
+            );
+            const resultado = await respuesta.json();
+            if (!respuesta.ok || resultado.estado !== "ok") {
+                throw new Error(resultado.mensaje || "No se pudo abrir el borrador.");
+            }
+            restaurarBorrador(resultado.datos.contenido);
+        } catch (error) {
+            console.error("No se pudo abrir el borrador:", error);
+            window.alert(error.message || "No se pudo abrir el borrador.");
+            window.location.href = `detalle-agente.html?id=${encodeURIComponent(agenteId)}`;
+            return;
+        }
+    }
+
     formularioCoaching.addEventListener("submit", async function (evento) {
         evento.preventDefault();
         sincronizarDetalleCoaching();
@@ -489,10 +635,12 @@ document.addEventListener("DOMContentLoaded", async function () {
         botonCompletar.textContent = "Guardando…";
 
         try {
+            const contenido = construirPayloadCoaching();
+            if (borradorId) contenido.draftId = borradorId;
             const respuesta = await fetch("http://localhost:3000/api/sesiones/coaching", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(construirPayloadCoaching())
+                body: JSON.stringify(contenido)
             });
             const resultado = await respuesta.json();
             if (!respuesta.ok || resultado.estado !== "ok") {

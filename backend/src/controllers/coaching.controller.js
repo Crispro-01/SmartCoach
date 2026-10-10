@@ -41,6 +41,127 @@ function marcadores(cantidad, columnas) {
     }).join(", ");
 }
 
+async function consultarAgenteAsignado(conexion, agenteId) {
+    const [agentes] = await conexion.execute(
+        "SELECT a.employee_id AS agenteId, c.employee_id AS coachId " +
+        "FROM usuarios a INNER JOIN roles ra ON ra.rol_id = a.rol_id " +
+        "INNER JOIN usuarios c ON c.employee_id = a.supervisor_id " +
+        "INNER JOIN roles rc ON rc.rol_id = c.rol_id " +
+        "WHERE a.employee_id = ? AND a.activo = TRUE AND ra.nombre = 'Agente' " +
+        "AND c.activo = TRUE AND rc.nombre = 'Coach'",
+        [texto(agenteId, "agente", 32)]
+    );
+    if (!agentes.length) {
+        throw new ErrorSolicitud("El agente no está activo o no tiene un Coach asignado.", 404);
+    }
+    return agentes[0];
+}
+
+async function consultarBorrador(conexion, id, agente, bloquear = false) {
+    const [filas] = await conexion.execute(
+        "SELECT s.sesion_id AS id, s.borrador_json AS contenido, e.codigo AS estado " +
+        "FROM sesiones s INNER JOIN tipos_sesion t ON t.tipo_sesion_id = s.tipo_sesion_id " +
+        "INNER JOIN estados_sesion e ON e.estado_sesion_id = s.estado_sesion_id " +
+        "WHERE s.sesion_id = ? AND s.agente_id = ? AND s.coach_id = ? AND t.codigo = 'COACHING'" +
+        (bloquear ? " FOR UPDATE" : ""),
+        [entero(id, "borrador", 1, Number.MAX_SAFE_INTEGER), agente.agenteId, agente.coachId]
+    );
+    if (!filas.length) throw new ErrorSolicitud("No se encontró el borrador de Coaching.", 404);
+    if (filas[0].estado !== "BORRADOR") {
+        throw new ErrorSolicitud("Esta sesión ya no es un borrador y no se puede editar.", 409);
+    }
+    return filas[0];
+}
+
+function contenidoBorrador(cuerpo) {
+    if (!cuerpo || typeof cuerpo !== "object" || Array.isArray(cuerpo)) {
+        throw new ErrorSolicitud("El contenido del borrador no es válido.");
+    }
+    texto(cuerpo.agentId, "agente", 32);
+    const contenido = JSON.stringify(cuerpo);
+    if (Buffer.byteLength(contenido, "utf8") > 90000) {
+        throw new ErrorSolicitud("El borrador supera el tamaño permitido.");
+    }
+    return contenido;
+}
+
+function responderError(respuesta, error, accion) {
+    console.error(`Error al ${accion} el borrador de Coaching:`, error.message);
+    return respuesta.status(error.status || 500).json({
+        estado: "error",
+        mensaje: error.status ? error.message : "No se pudo gestionar el borrador de Coaching."
+    });
+}
+
+export async function crearBorradorCoaching(solicitud, respuesta) {
+    let conexion;
+    try {
+        const contenido = contenidoBorrador(solicitud.body);
+        conexion = await pool.getConnection();
+        const agente = await consultarAgenteAsignado(conexion, solicitud.body.agentId);
+        const [tipos] = await conexion.execute("SELECT tipo_sesion_id FROM tipos_sesion WHERE codigo = 'COACHING'");
+        const [estados] = await conexion.execute("SELECT estado_sesion_id FROM estados_sesion WHERE codigo = 'BORRADOR'");
+        if (!tipos.length || !estados.length) throw new ErrorSolicitud("Faltan catálogos base para guardar el borrador.", 500);
+
+        const [sesion] = await conexion.execute(
+            "INSERT INTO sesiones (agente_id, coach_id, tipo_sesion_id, estado_sesion_id, tema, borrador_json) " +
+            "VALUES (?, ?, ?, ?, 'Coaching GROW (borrador)', ?)",
+            [agente.agenteId, agente.coachId, tipos[0].tipo_sesion_id, estados[0].estado_sesion_id, contenido]
+        );
+        return respuesta.status(201).json({ estado: "ok", datos: { sesionId: String(sesion.insertId) } });
+    } catch (error) {
+        return responderError(respuesta, error, "crear");
+    } finally {
+        if (conexion) conexion.release();
+    }
+}
+
+export async function obtenerBorradorCoaching(solicitud, respuesta) {
+    let conexion;
+    try {
+        conexion = await pool.getConnection();
+        const agente = await consultarAgenteAsignado(conexion, solicitud.query.agenteId);
+        const borrador = await consultarBorrador(conexion, solicitud.params.id, agente);
+        return respuesta.json({
+            estado: "ok",
+            datos: {
+                sesionId: String(borrador.id),
+                contenido: typeof borrador.contenido === "string" ? JSON.parse(borrador.contenido) : borrador.contenido
+            }
+        });
+    } catch (error) {
+        return responderError(respuesta, error, "consultar");
+    } finally {
+        if (conexion) conexion.release();
+    }
+}
+
+export async function actualizarBorradorCoaching(solicitud, respuesta) {
+    let conexion;
+    let iniciada = false;
+    try {
+        const contenido = contenidoBorrador(solicitud.body);
+        conexion = await pool.getConnection();
+        await conexion.beginTransaction();
+        iniciada = true;
+        const agente = await consultarAgenteAsignado(conexion, solicitud.body.agentId);
+        const borrador = await consultarBorrador(conexion, solicitud.params.id, agente, true);
+        await conexion.execute("UPDATE sesiones SET borrador_json = ? WHERE sesion_id = ?", [contenido, borrador.id]);
+        await conexion.commit();
+        iniciada = false;
+        return respuesta.json({ estado: "ok", datos: { sesionId: String(borrador.id) } });
+    } catch (error) {
+        if (iniciada && conexion) {
+            try { await conexion.rollback(); } catch (errorRollback) {
+                console.error("No se pudo revertir el borrador:", errorRollback.message);
+            }
+        }
+        return responderError(respuesta, error, "actualizar");
+    } finally {
+        if (conexion) conexion.release();
+    }
+}
+
 function normalizar(cuerpo, catalogos) {
     if (!cuerpo || typeof cuerpo !== "object" || Array.isArray(cuerpo)) {
         throw new ErrorSolicitud("El contenido de la sesión no es válido.");
@@ -146,18 +267,7 @@ export async function crearSesionCoaching(solicitud, respuesta) {
         await conexion.beginTransaction();
         iniciada = true;
 
-        const [agentes] = await conexion.execute(
-            "SELECT a.employee_id AS agenteId, c.employee_id AS coachId " +
-            "FROM usuarios a INNER JOIN roles ra ON ra.rol_id = a.rol_id " +
-            "INNER JOIN usuarios c ON c.employee_id = a.supervisor_id " +
-            "INNER JOIN roles rc ON rc.rol_id = c.rol_id " +
-            "WHERE a.employee_id = ? AND a.activo = TRUE AND ra.nombre = 'Agente' " +
-            "AND c.activo = TRUE AND rc.nombre = 'Coach'",
-            [texto(solicitud.body?.agentId, "agente", 32)]
-        );
-        if (!agentes.length) {
-            throw new ErrorSolicitud("El agente no está activo o no tiene un Coach asignado.", 404);
-        }
+        const agente = await consultarAgenteAsignado(conexion, solicitud.body?.agentId);
 
         const [behaviors] = await conexion.execute("SELECT comportamiento_id FROM comportamientos WHERE activo = TRUE");
         const [drivers] = await conexion.execute("SELECT call_driver_id FROM call_drivers WHERE activo = TRUE");
@@ -180,12 +290,23 @@ export async function crearSesionCoaching(solicitud, respuesta) {
             throw new ErrorSolicitud("Faltan catálogos base para crear la sesión.", 500);
         }
 
-        const [sesion] = await conexion.execute(
-            "INSERT INTO sesiones (agente_id, coach_id, tipo_sesion_id, estado_sesion_id, tema, duracion_segundos, fecha_completada) " +
-            "VALUES (?, ?, ?, ?, 'Coaching GROW', ?, CURRENT_TIMESTAMP)",
-            [agentes[0].agenteId, agentes[0].coachId, tipos[0].tipo_sesion_id, estados[0].estado_sesion_id, datos.duracion]
-        );
-        const sesionId = sesion.insertId;
+        let sesionId;
+        if (solicitud.body.draftId !== undefined && solicitud.body.draftId !== null) {
+            const borrador = await consultarBorrador(conexion, solicitud.body.draftId, agente, true);
+            sesionId = borrador.id;
+            await conexion.execute(
+                "UPDATE sesiones SET estado_sesion_id = ?, tema = 'Coaching GROW', " +
+                "duracion_segundos = ?, fecha_completada = CURRENT_TIMESTAMP, borrador_json = NULL WHERE sesion_id = ?",
+                [estados[0].estado_sesion_id, datos.duracion, sesionId]
+            );
+        } else {
+            const [sesion] = await conexion.execute(
+                "INSERT INTO sesiones (agente_id, coach_id, tipo_sesion_id, estado_sesion_id, tema, duracion_segundos, fecha_completada) " +
+                "VALUES (?, ?, ?, ?, 'Coaching GROW', ?, CURRENT_TIMESTAMP)",
+                [agente.agenteId, agente.coachId, tipos[0].tipo_sesion_id, estados[0].estado_sesion_id, datos.duracion]
+            );
+            sesionId = sesion.insertId;
+        }
         const finales = new Map();
         for (const id of catalogos.comportamientos) {
             finales.set(id, datos.llamadas.every(function (llamada) {

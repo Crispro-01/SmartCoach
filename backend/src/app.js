@@ -15,7 +15,7 @@ app.use(function (solicitud, respuesta, siguiente) {
     if (origenLocal) {
         respuesta.setHeader("Access-Control-Allow-Origin", origen);
         respuesta.setHeader("Vary", "Origin");
-        respuesta.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        respuesta.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
         respuesta.setHeader("Access-Control-Allow-Headers", "Content-Type");
     }
 
