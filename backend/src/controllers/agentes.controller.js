@@ -31,6 +31,10 @@ async function consultarAgentes(filtros) {
             ON rol.rol_id = usuario.rol_id
         LEFT JOIN sesiones AS sesion
             ON sesion.agente_id = usuario.employee_id
+            AND NOT EXISTS (
+                SELECT 1 FROM solicitudes_eliminacion_sesion AS archivo
+                WHERE archivo.sesion_id = sesion.sesion_id AND archivo.estado = 'APROBADA'
+            )
         LEFT JOIN tipos_sesion AS tipo
             ON tipo.tipo_sesion_id = sesion.tipo_sesion_id
         LEFT JOIN estados_sesion AS estado

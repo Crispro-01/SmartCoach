@@ -54,15 +54,18 @@ function preguntarOculto(mensaje) {
 }
 
 try {
-    const id = (await preguntar("ID del Coach de demostración (COACH001): ")).trim() || "COACH001";
+    const rol = process.argv[2] || "Coach";
+    if (!["Coach", "Manager"].includes(rol)) throw new Error("Indica Coach o Manager como rol.");
+    const predeterminado = rol === "Manager" ? "MGR001" : "COACH001";
+    const id = (await preguntar(`ID del ${rol} de demostración (${predeterminado}): `)).trim() || predeterminado;
     const [usuarios] = await pool.execute(
         "SELECT u.employee_id AS id, u.nombre FROM usuarios u " +
         "JOIN roles r ON r.rol_id = u.rol_id " +
-        "WHERE u.employee_id = ? AND u.activo = TRUE AND r.nombre = 'Coach' " +
+        "WHERE u.employee_id = ? AND u.activo = TRUE AND r.nombre = ? " +
         "AND u.password_hash IS NULL",
-        [id]
+        [id, rol]
     );
-    if (!usuarios.length) throw new Error("No existe un Coach activo sin contraseña con ese ID.");
+    if (!usuarios.length) throw new Error(`No existe un ${rol} activo sin contraseña con ese ID.`);
 
     console.log(`Cuenta: ${usuarios[0].nombre}. La contraseña no se mostrará ni se guardará en texto.`);
     const contrasena = await preguntarOculto("Elige una contraseña de 12 a 128 caracteres: ");

@@ -836,6 +836,31 @@ body {
 
 .solicitud-eliminacion button:disabled { opacity: 0.6; cursor: wait; }
 
+.navegacion-menu [hidden] { display: none; }
+
+.lista-solicitudes {
+    display: grid;
+    gap: 20px;
+    max-width: 1250px;
+}
+
+.solicitud-revision .campos-detalle-coaching { margin-bottom: 16px; }
+.solicitud-revision a { color: #1D4ED8; font-weight: bold; }
+.solicitud-revision label { display: block; margin: 16px 0 8px; font-weight: bold; }
+.solicitud-revision textarea {
+    display: block;
+    width: 100%;
+    min-height: 105px;
+    padding: 13px 14px;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    font: inherit;
+    resize: vertical;
+}
+.solicitud-revision .acciones-formulario { flex-wrap: wrap; margin-top: 14px; }
+.solicitud-revision .boton-secundario { cursor: pointer; }
+.solicitud-revision button:disabled { opacity: 0.6; cursor: wait; }
+
 @media (max-width: 650px) {
     .campos-detalle-coaching { grid-template-columns: 1fr; gap: 4px; }
     .campos-detalle-coaching dd { margin-bottom: 12px; }

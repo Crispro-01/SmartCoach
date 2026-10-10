@@ -1,4 +1,6 @@
-const URL_API_COACHING = "/api/sesiones/coaching";
+const esRevision = new URLSearchParams(window.location.search).get("revision") === "1";
+const URL_API_COACHING = esRevision
+    ? "/api/revision/sesiones/coaching" : "/api/sesiones/coaching";
 
 function valor(dato) {
     return dato === null || dato === undefined || dato === "" ? "—" : String(dato);
@@ -71,9 +73,12 @@ function mostrarSolicitudEliminacion(sesionId, solicitud, destino) {
     const tarjeta = seccion("Solicitud de eliminación", campos, destino);
     tarjeta.classList.add("solicitud-eliminacion");
     const aclaracion = document.createElement("p");
-    aclaracion.textContent = "Enviar una solicitud no borra la sesión. Quedará registrada con tu identidad y motivo para una revisión posterior.";
+    aclaracion.textContent = esRevision
+        ? "Esta sesión se conserva en MySQL aunque se apruebe su solicitud de eliminación."
+        : "Enviar una solicitud no borra la sesión. Quedará registrada con tu identidad y motivo para una revisión posterior.";
     tarjeta.append(aclaracion);
 
+    if (esRevision) return;
     if (solicitud && solicitud.estado !== "RECHAZADA") return;
 
     const botonSolicitar = document.createElement("button");
@@ -231,7 +236,14 @@ async function cargarSesion() {
         estado.textContent = "Falta identificar el agente o la sesión.";
         return;
     }
-    document.getElementById("volverAgente").href = `detalle-agente.html?id=${encodeURIComponent(agenteId)}`;
+    const volver = document.getElementById("volverAgente");
+    if (esRevision) {
+        volver.href = "revision-solicitudes.html";
+        volver.textContent = "← Volver a solicitudes";
+        document.querySelector(".usuario-dashboard span").textContent = "Manager";
+    } else {
+        volver.href = `detalle-agente.html?id=${encodeURIComponent(agenteId)}`;
+    }
     try {
         const respuesta = await fetch(`${URL_API_COACHING}/${encodeURIComponent(sesionId)}?agenteId=${encodeURIComponent(agenteId)}`);
         const resultado = await respuesta.json();

@@ -20,7 +20,8 @@ formularioLogin.addEventListener("submit", async function (evento) {
         });
         const resultado = await respuesta.json();
         if (!respuesta.ok) throw new Error(resultado.mensaje || "No se pudo iniciar sesión.");
-        window.location.href = "dashboard.html";
+        window.location.href = resultado.datos.rol === "Manager"
+            ? "revision-solicitudes.html" : "dashboard.html";
     } catch (error) {
         mensajeLogin.textContent = error.message;
         mensajeLogin.className = "mensaje-error";

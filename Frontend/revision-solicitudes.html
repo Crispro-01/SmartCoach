@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Coach - Revisar solicitudes</title>
+    <link rel="stylesheet" href="estilos.css">
+    <script src="menu.js" defer></script>
+    <script src="revision-solicitudes.js" defer></script>
+</head>
+<body>
+    <main class="dashboard" data-roles-permitidos="Manager">
+        <aside class="menu-lateral">
+            <div class="cabecera-menu">
+                <h1>Smart Coach</h1>
+                <button type="button" class="boton-menu" aria-label="Contraer menú" aria-expanded="true">☰</button>
+            </div>
+            <nav class="navegacion-menu" aria-label="Navegación principal">
+                <a href="revision-solicitudes.html" class="activo" aria-current="page">Solicitudes</a>
+                <a href="index.html">Cerrar sesión</a>
+            </nav>
+        </aside>
+        <section class="contenido-dashboard">
+            <header class="cabecera-dashboard">
+                <div>
+                    <h2>Solicitudes de eliminación</h2>
+                    <p>Revisa el motivo y la sesión antes de aprobar o rechazar. Aprobar la oculta de las vistas normales, pero conserva su historial.</p>
+                </div>
+                <div class="usuario-dashboard"><span>Manager</span></div>
+            </header>
+            <p id="estadoRevision" role="status">Cargando solicitudes...</p>
+            <div id="listaSolicitudes" class="lista-solicitudes"></div>
+        </section>
+    </main>
+</body>
+</html>

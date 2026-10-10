@@ -41,7 +41,7 @@ export async function iniciarSesion(solicitud, respuesta) {
         );
         const usuario = filas[0];
         const claveCorrecta = await verificarContrasena(contrasena, usuario?.passwordHash || HASH_FALSO);
-        if (!usuario || usuario.rol !== "Coach" || !usuario.passwordHash || !claveCorrecta) {
+        if (!usuario || !["Coach", "Manager"].includes(usuario.rol) || !usuario.passwordHash || !claveCorrecta) {
             intento.total += 1;
             intentosPorIp.set(ip, intento);
             return respuesta.status(401).json({ estado: "error", mensaje: "Correo o contraseña incorrectos." });

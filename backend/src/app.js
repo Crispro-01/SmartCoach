@@ -2,12 +2,13 @@ import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { configuracion } from "./config/env.js";
-import { exigirCoach } from "./auth/auth.middleware.js";
+import { exigirCoach, exigirManager } from "./auth/auth.middleware.js";
 import rutasAuth from "./routes/auth.routes.js";
 import rutasEstado from "./routes/estado.routes.js";
 import rutasAgentes from "./routes/agentes.routes.js";
 import rutasCatalogos from "./routes/catalogos.routes.js";
 import rutasCoaching from "./routes/coaching.routes.js";
+import rutasRevision from "./routes/revision.routes.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -34,6 +35,7 @@ app.use("/api/auth", rutasAuth);
 app.use("/api/agentes", exigirCoach, rutasAgentes);
 app.use("/api/catalogos", exigirCoach, rutasCatalogos);
 app.use("/api/sesiones", exigirCoach, rutasCoaching);
+app.use("/api/revision", exigirManager, rutasRevision);
 app.use("/Frontend", express.static(carpetaFrontend, { dotfiles: "deny", index: false }));
 app.get("/", function (solicitud, respuesta) { respuesta.redirect("/Frontend/index.html"); });
 

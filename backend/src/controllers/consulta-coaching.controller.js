@@ -11,6 +11,11 @@ export async function consultarSesionCoaching(solicitud, respuesta) {
     let conexion;
     try {
         conexion = await pool.getConnection();
+        const esManager = solicitud.usuario.rol === "Manager";
+        const campoResponsable = esManager ? "c.supervisor_id" : "s.coach_id";
+        const filtroArchivo = esManager ? "" :
+            " AND NOT EXISTS (SELECT 1 FROM solicitudes_eliminacion_sesion q " +
+            "WHERE q.sesion_id = s.sesion_id AND q.estado = 'APROBADA')";
         const [sesiones] = await conexion.execute(
             "SELECT s.sesion_id AS id, s.agente_id AS agenteId, a.nombre AS agenteNombre, " +
             "s.coach_id AS coachId, c.nombre AS coachNombre, s.tema, " +
@@ -21,8 +26,8 @@ export async function consultarSesionCoaching(solicitud, respuesta) {
             "JOIN usuarios c ON c.employee_id = s.coach_id " +
             "JOIN tipos_sesion t ON t.tipo_sesion_id = s.tipo_sesion_id " +
             "JOIN estados_sesion e ON e.estado_sesion_id = s.estado_sesion_id " +
-            "WHERE s.sesion_id = ? AND s.agente_id = ? AND s.coach_id = ? " +
-            "AND t.codigo = 'COACHING' AND e.codigo = 'COMPLETADA'",
+            `WHERE s.sesion_id = ? AND s.agente_id = ? AND ${campoResponsable} = ? ` +
+            "AND t.codigo = 'COACHING' AND e.codigo = 'COMPLETADA'" + filtroArchivo,
             [id, agenteId.trim(), solicitud.usuario.employeeId]
         );
         if (!sesiones.length) {
