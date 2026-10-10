@@ -76,7 +76,17 @@ function mostrarSolicitudEliminacion(sesionId, solicitud, destino) {
 
     if (solicitud && solicitud.estado !== "RECHAZADA") return;
 
+    const botonSolicitar = document.createElement("button");
+    botonSolicitar.type = "button";
+    botonSolicitar.className = "boton-principal";
+    botonSolicitar.textContent = "Solicitar eliminación";
+    botonSolicitar.setAttribute("aria-controls", "formularioSolicitudEliminacion");
+    botonSolicitar.setAttribute("aria-expanded", "false");
+    tarjeta.append(botonSolicitar);
+
     const formulario = document.createElement("form");
+    formulario.id = "formularioSolicitudEliminacion";
+    formulario.hidden = true;
     const etiqueta = document.createElement("label");
     etiqueta.htmlFor = "motivoEliminacion";
     etiqueta.textContent = "¿Por qué se debería eliminar esta sesión?";
@@ -91,14 +101,38 @@ function mostrarSolicitudEliminacion(sesionId, solicitud, destino) {
     boton.type = "submit";
     boton.className = "boton-principal";
     boton.textContent = "Enviar solicitud de eliminación";
+    const cancelar = document.createElement("button");
+    cancelar.type = "button";
+    cancelar.className = "boton-secundario";
+    cancelar.textContent = "Cancelar";
+    const acciones = document.createElement("div");
+    acciones.className = "acciones-formulario";
+    acciones.append(cancelar, boton);
     const mensaje = document.createElement("p");
     mensaje.setAttribute("role", "status");
-    formulario.append(etiqueta, motivo, boton, mensaje);
+    formulario.append(etiqueta, motivo, acciones, mensaje);
     tarjeta.append(formulario);
+
+    botonSolicitar.addEventListener("click", function () {
+        botonSolicitar.hidden = true;
+        botonSolicitar.setAttribute("aria-expanded", "true");
+        formulario.hidden = false;
+        motivo.focus();
+    });
+
+    cancelar.addEventListener("click", function () {
+        formulario.reset();
+        formulario.hidden = true;
+        mensaje.textContent = "";
+        botonSolicitar.hidden = false;
+        botonSolicitar.setAttribute("aria-expanded", "false");
+        botonSolicitar.focus();
+    });
 
     formulario.addEventListener("submit", async function (evento) {
         evento.preventDefault();
         boton.disabled = true;
+        cancelar.disabled = true;
         mensaje.textContent = "Registrando solicitud...";
         try {
             const respuesta = await fetch(`${URL_API_COACHING}/${encodeURIComponent(sesionId)}/solicitudes-eliminacion`, {
@@ -112,6 +146,7 @@ function mostrarSolicitudEliminacion(sesionId, solicitud, destino) {
         } catch (error) {
             mensaje.textContent = error.message;
             boton.disabled = false;
+            cancelar.disabled = false;
         }
     });
 }
