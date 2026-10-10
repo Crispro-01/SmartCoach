@@ -60,9 +60,65 @@ function tablaEvaluaciones(titulo, evaluaciones, destino, campoResultado) {
     destino.append(tarjeta);
 }
 
+function mostrarSolicitudEliminacion(sesionId, solicitud, destino) {
+    const campos = solicitud ? [
+        ["Número de solicitud", solicitud.id],
+        ["Estado", solicitud.estado],
+        ["Fecha de solicitud", solicitud.fechaSolicitud],
+        ["Motivo registrado", solicitud.motivo]
+    ] : [["Estado", "No se ha solicitado la eliminación"]];
+    if (solicitud?.respuestaRevision) campos.push(["Respuesta de revisión", solicitud.respuestaRevision]);
+    const tarjeta = seccion("Solicitud de eliminación", campos, destino);
+    tarjeta.classList.add("solicitud-eliminacion");
+    const aclaracion = document.createElement("p");
+    aclaracion.textContent = "Enviar una solicitud no borra la sesión. Quedará registrada con tu identidad y motivo para una revisión posterior.";
+    tarjeta.append(aclaracion);
+
+    if (solicitud && solicitud.estado !== "RECHAZADA") return;
+
+    const formulario = document.createElement("form");
+    const etiqueta = document.createElement("label");
+    etiqueta.htmlFor = "motivoEliminacion";
+    etiqueta.textContent = "¿Por qué se debería eliminar esta sesión?";
+    const motivo = document.createElement("textarea");
+    motivo.id = "motivoEliminacion";
+    motivo.name = "motivo";
+    motivo.minLength = 20;
+    motivo.maxLength = 1000;
+    motivo.required = true;
+    motivo.rows = 4;
+    const boton = document.createElement("button");
+    boton.type = "submit";
+    boton.className = "boton-principal";
+    boton.textContent = "Enviar solicitud de eliminación";
+    const mensaje = document.createElement("p");
+    mensaje.setAttribute("role", "status");
+    formulario.append(etiqueta, motivo, boton, mensaje);
+    tarjeta.append(formulario);
+
+    formulario.addEventListener("submit", async function (evento) {
+        evento.preventDefault();
+        boton.disabled = true;
+        mensaje.textContent = "Registrando solicitud...";
+        try {
+            const respuesta = await fetch(`${URL_API_COACHING}/${encodeURIComponent(sesionId)}/solicitudes-eliminacion`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ motivo: motivo.value })
+            });
+            const resultado = await respuesta.json();
+            if (!respuesta.ok) throw new Error(resultado.mensaje || "No se pudo registrar la solicitud.");
+            window.location.reload();
+        } catch (error) {
+            mensaje.textContent = error.message;
+            boton.disabled = false;
+        }
+    });
+}
+
 function mostrarSesion(datos) {
     const destino = document.getElementById("contenidoSesion");
-    const { sesion, detalles, llamadas, resultados, kpi, compromisos, rca } = datos;
+    const { sesion, detalles, llamadas, resultados, kpi, compromisos, rca, solicitudEliminacion } = datos;
     destino.replaceChildren();
     document.title = `Smart Coach - Coaching #${sesion.id}`;
 
@@ -75,6 +131,8 @@ function mostrarSesion(datos) {
         ["Completada", sesion.fechaCompletada],
         ["Duración", sesion.duracionSegundos === null ? null : `${sesion.duracionSegundos} segundos`]
     ], destino);
+
+    mostrarSolicitudEliminacion(sesion.id, solicitudEliminacion, destino);
 
     if (detalles) seccion("Seguimiento del comportamiento", [
         ["Apertura del comportamiento", siNo(detalles.apertura)],

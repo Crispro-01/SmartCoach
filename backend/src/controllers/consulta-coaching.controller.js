@@ -84,6 +84,15 @@ export async function consultarSesionCoaching(solicitud, respuesta) {
             "FROM coaching_rca WHERE sesion_id = ?",
             [id]
         );
+        const [solicitudes] = await conexion.execute(
+            "SELECT solicitud_id AS id, motivo, estado, " +
+            "DATE_FORMAT(fecha_solicitud, '%d/%m/%Y %H:%i') AS fechaSolicitud, " +
+            "DATE_FORMAT(fecha_resolucion, '%d/%m/%Y %H:%i') AS fechaResolucion, " +
+            "respuesta_revision AS respuestaRevision " +
+            "FROM solicitudes_eliminacion_sesion WHERE sesion_id = ? " +
+            "ORDER BY solicitud_id DESC LIMIT 1",
+            [id]
+        );
 
         const evaluacionesPorLlamada = new Map();
         for (const evaluacion of evaluaciones) {
@@ -102,7 +111,8 @@ export async function consultarSesionCoaching(solicitud, respuesta) {
                 resultados: resultados.map(function (fila) { return { ...fila, cumplioFinal: Boolean(fila.cumplioFinal) }; }),
                 kpi: kpis[0] || null,
                 compromisos: compromisos[0] || null,
-                rca: raices[0] || null
+                rca: raices[0] || null,
+                solicitudEliminacion: solicitudes[0] || null
             }
         });
     } catch (error) {
