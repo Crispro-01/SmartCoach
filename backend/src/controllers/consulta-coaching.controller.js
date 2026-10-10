@@ -21,8 +21,9 @@ export async function consultarSesionCoaching(solicitud, respuesta) {
             "JOIN usuarios c ON c.employee_id = s.coach_id " +
             "JOIN tipos_sesion t ON t.tipo_sesion_id = s.tipo_sesion_id " +
             "JOIN estados_sesion e ON e.estado_sesion_id = s.estado_sesion_id " +
-            "WHERE s.sesion_id = ? AND s.agente_id = ? AND t.codigo = 'COACHING' AND e.codigo = 'COMPLETADA'",
-            [id, agenteId.trim()]
+            "WHERE s.sesion_id = ? AND s.agente_id = ? AND s.coach_id = ? " +
+            "AND t.codigo = 'COACHING' AND e.codigo = 'COMPLETADA'",
+            [id, agenteId.trim(), solicitud.usuario.employeeId]
         );
         if (!sesiones.length) {
             return respuesta.status(404).json({ estado: "error", mensaje: "No se encontró una sesión de Coaching completada para este agente." });

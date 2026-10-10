@@ -1,4 +1,4 @@
-const URL_API_AGENTE = "http://localhost:3000/api/agentes";
+const URL_API_AGENTE = "/api/agentes";
 
 function crearCelda(texto) {
     const celda = document.createElement("td");

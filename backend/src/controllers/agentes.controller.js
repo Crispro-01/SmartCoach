@@ -83,9 +83,8 @@ function responderError(respuesta, error) {
 
 export async function listarAgentes(solicitud, respuesta) {
     try {
-        const supervisorId = solicitud.query.supervisorId;
         const filtros = {
-            supervisorId: typeof supervisorId === "string" ? supervisorId.trim() : ""
+            supervisorId: solicitud.usuario.employeeId
         };
         const datos = await consultarAgentes(filtros);
 
@@ -101,7 +100,8 @@ export async function listarAgentes(solicitud, respuesta) {
 export async function obtenerAgentePorId(solicitud, respuesta) {
     try {
         const [agente] = await consultarAgentes({
-            employeeId: solicitud.params.id
+            employeeId: solicitud.params.id,
+            supervisorId: solicitud.usuario.employeeId
         });
 
         if (!agente) {

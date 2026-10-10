@@ -41,15 +41,15 @@ function marcadores(cantidad, columnas) {
     }).join(", ");
 }
 
-async function consultarAgenteAsignado(conexion, agenteId) {
+async function consultarAgenteAsignado(conexion, agenteId, coachId) {
     const [agentes] = await conexion.execute(
         "SELECT a.employee_id AS agenteId, c.employee_id AS coachId " +
         "FROM usuarios a INNER JOIN roles ra ON ra.rol_id = a.rol_id " +
         "INNER JOIN usuarios c ON c.employee_id = a.supervisor_id " +
         "INNER JOIN roles rc ON rc.rol_id = c.rol_id " +
-        "WHERE a.employee_id = ? AND a.activo = TRUE AND ra.nombre = 'Agente' " +
+        "WHERE a.employee_id = ? AND c.employee_id = ? AND a.activo = TRUE AND ra.nombre = 'Agente' " +
         "AND c.activo = TRUE AND rc.nombre = 'Coach'",
-        [texto(agenteId, "agente", 32)]
+        [texto(agenteId, "agente", 32), coachId]
     );
     if (!agentes.length) {
         throw new ErrorSolicitud("El agente no está activo o no tiene un Coach asignado.", 404);
@@ -98,7 +98,7 @@ export async function crearBorradorCoaching(solicitud, respuesta) {
     try {
         const contenido = contenidoBorrador(solicitud.body);
         conexion = await pool.getConnection();
-        const agente = await consultarAgenteAsignado(conexion, solicitud.body.agentId);
+        const agente = await consultarAgenteAsignado(conexion, solicitud.body.agentId, solicitud.usuario.employeeId);
         const [tipos] = await conexion.execute("SELECT tipo_sesion_id FROM tipos_sesion WHERE codigo = 'COACHING'");
         const [estados] = await conexion.execute("SELECT estado_sesion_id FROM estados_sesion WHERE codigo = 'BORRADOR'");
         if (!tipos.length || !estados.length) throw new ErrorSolicitud("Faltan catálogos base para guardar el borrador.", 500);
@@ -120,7 +120,7 @@ export async function obtenerBorradorCoaching(solicitud, respuesta) {
     let conexion;
     try {
         conexion = await pool.getConnection();
-        const agente = await consultarAgenteAsignado(conexion, solicitud.query.agenteId);
+        const agente = await consultarAgenteAsignado(conexion, solicitud.query.agenteId, solicitud.usuario.employeeId);
         const borrador = await consultarBorrador(conexion, solicitud.params.id, agente);
         return respuesta.json({
             estado: "ok",
@@ -144,7 +144,7 @@ export async function actualizarBorradorCoaching(solicitud, respuesta) {
         conexion = await pool.getConnection();
         await conexion.beginTransaction();
         iniciada = true;
-        const agente = await consultarAgenteAsignado(conexion, solicitud.body.agentId);
+        const agente = await consultarAgenteAsignado(conexion, solicitud.body.agentId, solicitud.usuario.employeeId);
         const borrador = await consultarBorrador(conexion, solicitud.params.id, agente, true);
         await conexion.execute("UPDATE sesiones SET borrador_json = ? WHERE sesion_id = ?", [contenido, borrador.id]);
         await conexion.commit();
@@ -267,7 +267,7 @@ export async function crearSesionCoaching(solicitud, respuesta) {
         await conexion.beginTransaction();
         iniciada = true;
 
-        const agente = await consultarAgenteAsignado(conexion, solicitud.body?.agentId);
+        const agente = await consultarAgenteAsignado(conexion, solicitud.body?.agentId, solicitud.usuario.employeeId);
 
         const [behaviors] = await conexion.execute("SELECT comportamiento_id FROM comportamientos WHERE activo = TRUE");
         const [drivers] = await conexion.execute("SELECT call_driver_id FROM call_drivers WHERE activo = TRUE");

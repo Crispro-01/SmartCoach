@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     try {
-        const respuestaCatalogos = await fetch("http://localhost:3000/api/catalogos/coaching");
+        const respuestaCatalogos = await fetch("/api/catalogos/coaching");
         const resultadoCatalogos = await respuestaCatalogos.json();
 
         if (!respuestaCatalogos.ok || resultadoCatalogos.estado !== "ok") {
@@ -377,8 +377,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         try {
             const respuesta = await fetch(
                 borradorId
-                    ? `http://localhost:3000/api/sesiones/coaching/borradores/${encodeURIComponent(borradorId)}`
-                    : "http://localhost:3000/api/sesiones/coaching/borradores",
+                    ? `/api/sesiones/coaching/borradores/${encodeURIComponent(borradorId)}`
+                    : "/api/sesiones/coaching/borradores",
                 {
                     method: borradorId ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
@@ -593,7 +593,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (borradorId) {
         try {
             const respuesta = await fetch(
-                `http://localhost:3000/api/sesiones/coaching/borradores/${encodeURIComponent(borradorId)}?agenteId=${encodeURIComponent(agenteId)}`
+                `/api/sesiones/coaching/borradores/${encodeURIComponent(borradorId)}?agenteId=${encodeURIComponent(agenteId)}`
             );
             const resultado = await respuesta.json();
             if (!respuesta.ok || resultado.estado !== "ok") {
@@ -637,7 +637,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         try {
             const contenido = construirPayloadCoaching();
             if (borradorId) contenido.draftId = borradorId;
-            const respuesta = await fetch("http://localhost:3000/api/sesiones/coaching", {
+            const respuesta = await fetch("/api/sesiones/coaching", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(contenido)

@@ -1,4 +1,4 @@
-const URL_API_COACHING = "http://localhost:3000/api/sesiones/coaching";
+const URL_API_COACHING = "/api/sesiones/coaching";
 
 function valor(dato) {
     return dato === null || dato === undefined || dato === "" ? "—" : String(dato);
