@@ -40,6 +40,14 @@ function crearCeldaEstado(sesion) {
         celda.append(enlace);
     }
 
+    if (estado === "Completada" && sesion.clase === "coaching") {
+        const enlace = document.createElement("a");
+        enlace.href = `detalle-coaching.html?agente=${encodeURIComponent(sesion.agenteId)}&sesion=${encodeURIComponent(sesion.id)}`;
+        enlace.textContent = "Ver sesión";
+        enlace.style.marginLeft = "0.75rem";
+        celda.append(enlace);
+    }
+
     return celda;
 }
 
