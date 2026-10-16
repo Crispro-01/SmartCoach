@@ -1384,16 +1384,6 @@ body {
     background-color: #EAB308;
 }
 
-.boton-continuar {
-    border-color: #EAB308;
-    background-color: #FACC15;
-    color: #713F12;
-}
-
-.boton-continuar:hover {
-    background-color: #EAB308;
-}
-
 .boton-descartar {
     display: inline-flex;
     align-items: center;

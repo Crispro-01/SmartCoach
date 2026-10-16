@@ -43,7 +43,7 @@ function crearCeldaEstado(sesion) {
     if (estado === "Borrador" && sesion.clase === "coaching") {
         const enlace = document.createElement("a");
         enlace.href = `formulario-coaching.html?agente=${encodeURIComponent(sesion.agenteId)}&tipo=Coaching&borrador=${encodeURIComponent(sesion.id)}`;
-        enlace.className = "boton-secundario boton-continuar enlace-boton accion-sesion";
+        enlace.className = "boton-principal enlace-boton accion-sesion";
         enlace.textContent = "Continuar";
         grupo.append(enlace);
     }
