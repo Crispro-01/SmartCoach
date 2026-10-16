@@ -1,91 +1,53 @@
-# API de Smart Coach (estado actual)
+# API de Smart Coach
 
-Esta guía describe la API que existe en el proyecto para la evidencia **GA7-220501096-AA5-EV02: Producto API**. La base local es `http://localhost:3000`; si `PORT` está definido en `backend/.env`, se usa ese puerto.
+Esta guía describe las rutas conectadas en `backend/src/app.js`. En desarrollo local, la aplicación sirve tanto el frontend como la API desde `http://127.0.0.1:3000`; si `PORT` está configurado en `backend/.env`, se utiliza ese puerto. La ruta `/` redirige a `/Frontend/index.html`.
 
-## Endpoints implementados
+## Acceso y roles
 
-| Método | Ruta | Uso | Efecto |
+- `POST /api/auth/login`: inicia sesión con correo y contraseña. La respuesta incluye una cookie de sesión `HttpOnly` y `SameSite=Strict`.
+- `GET /api/auth/me`: devuelve los datos públicos de la sesión actual; requiere usuario autenticado.
+- `POST /api/auth/logout`: cierra la sesión actual y limpia la cookie.
+- Las rutas de agentes, catálogos y sesiones requieren el rol **Coach**.
+- Las rutas `/api/revision/*` requieren el rol **Manager**.
+- El estado de la API (`GET /api/estado`) es público.
+
+La autorización vuelve a consultar en MySQL que la cuenta siga activa y conserva el rol permitido para cada área. Las operaciones que escriben datos también verifican que el origen corresponda al servidor local configurado.
+
+## Rutas disponibles
+
+| Método | Ruta | Rol | Uso y efecto |
 |---|---|---|---|
-| `GET` | `/api/estado` | Comprueba que la API está disponible. | Solo lectura. |
-| `GET` | `/api/agentes` | Lista agentes activos y el resumen de sus sesiones. Admite `?supervisorId=COACH001`. | Solo lectura. |
-| `GET` | `/api/agentes/:id` | Consulta un agente activo por su ID de empleado. | Solo lectura. |
-| `GET` | `/api/catalogos/coaching` | Devuelve comportamientos, Call Drivers agrupados por categoría, KPIs y tipos de seguimiento. | Solo lectura. |
-| `POST` | `/api/sesiones/coaching` | Valida y guarda una sesión completa de Coaching y sus registros relacionados dentro de una transacción MySQL. | **Escribe datos**; no repetir en pruebas sin querer crear otro Coaching. |
+| `GET` | `/api/estado` | Público | Comprueba que la API responde; solo lectura. |
+| `POST` | `/api/auth/login` | Público | Valida credenciales y crea una sesión. |
+| `GET` | `/api/auth/me` | Usuario autenticado | Consulta los datos públicos de la sesión actual. |
+| `POST` | `/api/auth/logout` | Sesión actual | Invalida la sesión y limpia la cookie. |
+| `GET` | `/api/agentes` | Coach | Lista agentes activos del equipo y el resumen de sus sesiones. |
+| `GET` | `/api/agentes/:id` | Coach | Consulta un agente activo por su ID de empleado. |
+| `GET` | `/api/catalogos/coaching` | Coach | Devuelve comportamientos, Call Drivers agrupados, KPIs y tipos de seguimiento activos. |
+| `POST` | `/api/sesiones/coaching` | Coach | Crea una sesión completa o convierte un borrador en sesión completada. Guarda sus bloques en una transacción MySQL. |
+| `POST` | `/api/sesiones/coaching/borradores` | Coach | Guarda un borrador editable. |
+| `GET` | `/api/sesiones/coaching/borradores/:id?agenteId=...` | Coach | Consulta un borrador propio. |
+| `PUT` | `/api/sesiones/coaching/borradores/:id` | Coach | Actualiza solo un borrador propio; una sesión completada se rechaza. |
+| `GET` | `/api/sesiones/coaching/:id?agenteId=...` | Coach | Consulta una sesión completada de su equipo, excepto si fue archivada mediante una aprobación. |
+| `POST` | `/api/sesiones/coaching/:id/solicitudes-eliminacion` | Coach | Registra el motivo para que un Manager revise la solicitud; no borra la sesión. |
+| `GET` | `/api/revision/solicitudes` | Manager | Lista solicitudes de los Coaches que pertenecen a su equipo. |
+| `PUT` | `/api/revision/solicitudes/:id` | Manager | Aprueba o rechaza una solicitud pendiente con justificación. |
+| `GET` | `/api/revision/sesiones/coaching/:id?agenteId=...` | Manager | Consulta el detalle de una sesión de su equipo, incluso si fue archivada. |
 
-La API no implementa actualmente `PUT`, `PATCH` ni `DELETE` para sesiones. No existe una eliminación directa de Coachings desde el backend.
+Los borradores pueden editarse. Las sesiones completadas no tienen una ruta de edición: para retirarlas del historial normal se solicita una revisión. Si el Manager aprueba, la sesión queda archivada para el Coach, pero sus datos se conservan en MySQL. No existe una eliminación física directa desde la interfaz.
 
-## Formato general
+## Guardado transaccional de Coaching
 
-Las respuestas de éxito usan JSON y, cuando corresponde, incluyen `estado: "ok"` y los datos en `datos`. Los errores de validación devuelven un mensaje y un código HTTP 4xx; los errores inesperados de servidor devuelven 500. Para solicitudes JSON se usa `Content-Type: application/json`.
+El formulario real construye el objeto en `Frontend/formulario-coaching.js` (`construirPayloadCoaching`). Los IDs se cargan desde `/api/catalogos/coaching`; la API vuelve a validarlos en el servidor, sin confiar solamente en las validaciones del navegador. Para guardar una sesión se requieren exactamente dos llamadas y la evaluación de todos los comportamientos activos en ambas llamadas. Una apertura debe usar el tipo de seguimiento **Constructivo** y el número de sesión 1.
 
-### Ejemplo de respuesta de disponibilidad
+Al guardar, el backend persiste la sesión, el detalle, las llamadas, sus evaluaciones, los resultados de comportamiento, el KPI, los compromisos y el análisis RCA dentro de una transacción. Si una validación o escritura falla, revierte la transacción para evitar registros parciales. Al completar un borrador se conserva el mismo ID y su contenido temporal se limpia como parte de la misma transacción.
 
-```json
-{
-  "estado": "ok",
-  "mensaje": "API de Smart Coach funcionando"
-}
-```
+## Solicitudes de eliminación
 
-### Cuerpo de creación de Coaching
+El Coach debe indicar un motivo de 20 a 1000 caracteres. La solicitud queda pendiente y la sesión continúa disponible mientras se revisa. El Manager solo puede resolver solicitudes de su equipo, con una justificación de 20 a 1000 caracteres. La aprobación la archiva del historial normal; el rechazo la mantiene visible. En ambos casos se conserva la sesión y el resultado de la revisión para mantener trazabilidad.
 
-El formulario real construye el objeto en `Frontend/formulario-coaching.js` (`construirPayloadCoaching`). Los IDs deben elegirse de `/api/catalogos/coaching`; ambas llamadas necesitan evaluar todos los comportamientos activos (actualmente 14), y la sesión exige exactamente dos llamadas.
+## Formato de respuestas y entorno
 
-```json
-{
-  "agentId": "TM001",
-  "opening": true,
-  "followUpTypeId": 1,
-  "sessionNumber": 1,
-  "behaviorWorkedId": 1,
-  "calls": [
-    {
-      "number": 1,
-      "contactId": "DEMO-LLAMADA-1",
-      "callDriverId": 1,
-      "summary": "Ejemplo de práctica; no contiene información real de clientes.",
-      "resolved": true,
-      "evaluations": [{ "behaviorId": 1, "fulfilled": true }]
-    },
-    {
-      "number": 2,
-      "contactId": "DEMO-LLAMADA-2",
-      "callDriverId": 1,
-      "summary": "Segunda llamada ficticia para la demostración.",
-      "resolved": true,
-      "evaluations": [{ "behaviorId": 1, "fulfilled": true }]
-    }
-  ],
-  "kpi": {
-    "kpiId": 1,
-    "resultMtd": "10",
-    "previousGoal": "",
-    "currentResult": "10",
-    "nextGoal": "11"
-  },
-  "commitments": {
-    "coach": { "what": "Revisar la práctica", "how": "En una sesión de seguimiento", "when": "Próxima semana", "recognition": "Reconocer el esfuerzo" },
-    "agent": { "what": "Practicar el comportamiento", "how": "Aplicándolo en llamadas de práctica", "when": "Durante la semana", "evaluation": "Revisar el avance", "recognition": "Valorar el avance" }
-  },
-  "rca": {
-    "activity": "Práctica guiada", "closingBehavior": true, "callsWithBehavior": "2 de 2",
-    "trendLast3Weeks": "En observación", "reasonNotPerformed": "No aplica a esta sesión de apertura",
-    "activityToOvercome": "Practicar", "whyContinue": "Consolidar el comportamiento",
-    "roleplayResult": "Práctica completada", "currentAttainment": "10", "kpiChange": "Seguimiento pendiente",
-    "behaviorChange": "Revisar en el siguiente acompañamiento"
-  },
-  "durationSeconds": 300
-}
-```
+Las respuestas usan JSON; normalmente incluyen `estado: "ok"` y los datos en `datos`. Los errores de entrada o permisos devuelven códigos HTTP 4xx, y los errores inesperados de servidor devuelven 500. La API aplica `Cache-Control: no-store` a `/api/*`.
 
-**Importante:** el fragmento de `evaluations` anterior solo ilustra la forma de un elemento. Para que `POST` pase la validación hay que enviar los 14 comportamientos activos, con todos sus IDs distintos, para cada una de las dos llamadas. `opening: true` debe usar el tipo de seguimiento Constructivo y la sesión número 1. Además, `TM001` debe ser un agente activo con un Coach activo asignado.
-
-Al aceptar la solicitud, el backend guarda la sesión, llamadas, evaluaciones, KPI, compromisos y RCA en una sola transacción. Si una validación o escritura falla, hace rollback y responde con error; no debe quedar una sesión parcialmente grabada.
-
-## Privacidad, edición y solicitudes de eliminación
-
-El backend actual no ofrece edición ni eliminación de sesiones. El requisito acordado para una futura eliminación es que nunca se borre un Coaching directamente: se debe registrar una solicitud separada con el motivo, solicitante y fecha; una persona autorizada distinta la revisará, y el sistema deberá conservar el resultado de aprobación o rechazo y su historial. La eliminación solo podría ocurrir después de aprobarse y dejar auditoría. Este flujo **todavía no está implementado**; requiere autenticación y autorización verificables, una tabla de solicitudes/auditoría y controles de integridad. No ejecutar `DELETE` manualmente como parte de las pruebas.
-
-## Seguridad del entorno actual
-
-Esta API es una etapa local de desarrollo. El backend todavía no autentica ni identifica de forma confiable a la persona que solicita operaciones. Por ello no debe publicarse en Internet ni considerarse lista para uso real con información de clientes. La colección de Postman incluida ejecuta únicamente solicitudes `GET`.
+Este proyecto se ejecuta localmente para desarrollo y formación. Antes de usarlo con datos reales o publicarlo en Internet se deben revisar y endurecer la configuración de despliegue, el manejo de sesiones, secretos y demás controles de seguridad.
