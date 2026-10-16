@@ -665,6 +665,14 @@ body {
     padding: 24px;
 }
 
+.historial-agente .tabla-agentes th:first-child { width: 30%; }
+.historial-agente .tabla-agentes th:nth-child(2) { width: 30%; }
+.historial-agente .tabla-agentes th:last-child,
+.historial-agente .tabla-agentes td:last-child {
+    width: 40%;
+    text-align: center;
+}
+
 .contenedor-tabla {
     overflow-x: auto;
 }
@@ -693,9 +701,18 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 64px;
-    padding: 9px 16px;
-    vertical-align: middle;
+    width: 116px;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 9px 12px;
+}
+
+.grupo-estado-sesion {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
 }
 
 /* FORMULARIO CORRECTIVO */
