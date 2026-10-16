@@ -8,8 +8,10 @@ import {
 } from "../controllers/coaching.controller.js";
 import { consultarSesionCoaching } from "../controllers/consulta-coaching.controller.js";
 import { solicitarEliminacionCoaching } from "../controllers/solicitudes-eliminacion.controller.js";
+import { listarHistorial } from "../controllers/historial.controller.js";
 
 const rutasCoaching = Router();
+rutasCoaching.get("/", listarHistorial);
 rutasCoaching.post("/coaching", crearSesionCoaching);
 rutasCoaching.post("/coaching/borradores", crearBorradorCoaching);
 rutasCoaching.get("/coaching/borradores/:id", obtenerBorradorCoaching);

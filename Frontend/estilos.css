@@ -686,6 +686,19 @@ body {
     overflow-x: auto;
 }
 
+/* El estado y la acción conservan columnas independientes, también en pantallas pequeñas. */
+.pagina-historial .contenido-dashboard { min-width: 0; }
+.historial-general .tabla-agentes { min-width: 780px; }
+.historial-general .tabla-agentes th,
+.historial-general .tabla-agentes td { vertical-align: middle; }
+.historial-general .tabla-agentes th:nth-last-child(-n+2),
+.historial-general .tabla-agentes td:nth-last-child(-n+2) { text-align: center; }
+.historial-general .tabla-agentes td:last-child { width: 140px; }
+.historial-general .tabla-agentes td:first-child { white-space: nowrap; }
+.historial-general #mensajeHistorial { margin-bottom: 16px; }
+.historial-general #reintentarHistorial { margin-bottom: 16px; }
+.historial-general #reintentarHistorial[hidden] { display: none; }
+
 .estado-completada {
     display: inline-block;
     padding: 6px 10px;

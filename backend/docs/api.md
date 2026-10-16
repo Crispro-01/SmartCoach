@@ -24,6 +24,7 @@ La autorización vuelve a consultar en MySQL que la cuenta siga activa y conserv
 | `GET` | `/api/agentes` | Coach | Lista agentes activos del equipo y el resumen de sus sesiones. |
 | `GET` | `/api/agentes/:id` | Coach | Consulta un agente activo por su ID de empleado. |
 | `GET` | `/api/catalogos/coaching` | Coach | Devuelve comportamientos, Call Drivers agrupados, KPIs y tipos de seguimiento activos. |
+| `GET` | `/api/sesiones` | Coach | Lista sus sesiones de Coaching de agentes activos de su equipo, de más reciente a más antigua. Incluye borradores y completadas, pero excluye las archivadas por aprobación. Solo lectura. |
 | `POST` | `/api/sesiones/coaching` | Coach | Crea una sesión completa o convierte un borrador en sesión completada. Guarda sus bloques en una transacción MySQL. |
 | `POST` | `/api/sesiones/coaching/borradores` | Coach | Guarda un borrador editable. |
 | `GET` | `/api/sesiones/coaching/borradores/:id?agenteId=...` | Coach | Consulta un borrador propio. |
