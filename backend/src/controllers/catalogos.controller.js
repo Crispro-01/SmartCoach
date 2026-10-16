@@ -41,6 +41,8 @@ export async function obtenerCatalogosCoaching(solicitud, respuesta) {
             )
         ]);
 
+        // El JOIN repite la categoría por cada opción; el Map la agrupa una sola vez
+        // y conserva el orden recibido de MySQL para los selectores del formulario.
         const categoriasPorId = new Map();
 
         for (const fila of callDrivers) {

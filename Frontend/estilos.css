@@ -264,6 +264,20 @@ body {
     margin-bottom: 30px;
 }
 
+.pagina-inicio .contenido-dashboard { min-width: 0; }
+.pagina-inicio .resumen-dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.pagina-inicio #mensajeResumen { margin-bottom: 16px; color: #475569; }
+.pagina-inicio #reintentarResumen { margin-bottom: 16px; }
+.pagina-inicio #reintentarResumen[hidden] { display: none; }
+
+@media (max-width: 760px) {
+    .pagina-inicio .resumen-dashboard { grid-template-columns: 1fr; }
+    .pagina-inicio .acciones-contenedor { flex-direction: column; }
+}
+
 .tarjeta-resumen {
     flex: 1;
     background-color: white;

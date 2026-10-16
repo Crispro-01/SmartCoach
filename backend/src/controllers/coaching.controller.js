@@ -58,6 +58,8 @@ async function consultarAgenteAsignado(conexion, agenteId, coachId) {
 }
 
 async function consultarBorrador(conexion, id, agente, bloquear = false) {
+    // Al actualizar, descartar o completar, FOR UPDATE bloquea la fila hasta cerrar
+    // la transacción para impedir que dos operaciones cambien el mismo borrador a la vez.
     const [filas] = await conexion.execute(
         "SELECT s.sesion_id AS id, s.borrador_json AS contenido, e.codigo AS estado " +
         "FROM sesiones s INNER JOIN tipos_sesion t ON t.tipo_sesion_id = s.tipo_sesion_id " +
@@ -74,6 +76,8 @@ async function consultarBorrador(conexion, id, agente, bloquear = false) {
 }
 
 function contenidoBorrador(cuerpo) {
+    // Un borrador admite campos sin completar. Se limita su tamaño y se conserva
+    // como JSON; la validación completa de negocio ocurre al completar la sesión.
     if (!cuerpo || typeof cuerpo !== "object" || Array.isArray(cuerpo)) {
         throw new ErrorSolicitud("El contenido del borrador no es válido.");
     }
@@ -289,6 +293,8 @@ export async function crearSesionCoaching(solicitud, respuesta) {
     let conexion;
     let iniciada = false;
     try {
+        // Todos los bloques se guardan en la misma conexión y transacción:
+        // si una escritura falla, el rollback evita dejar una sesión parcial.
         conexion = await pool.getConnection();
         await conexion.beginTransaction();
         iniciada = true;
@@ -318,6 +324,7 @@ export async function crearSesionCoaching(solicitud, respuesta) {
 
         let sesionId;
         if (solicitud.body.draftId !== undefined && solicitud.body.draftId !== null) {
+            // Completar transforma el borrador existente, conserva su ID y limpia el JSON temporal.
             const borrador = await consultarBorrador(conexion, solicitud.body.draftId, agente, true);
             sesionId = borrador.id;
             await conexion.execute(
@@ -334,6 +341,7 @@ export async function crearSesionCoaching(solicitud, respuesta) {
             sesionId = sesion.insertId;
         }
         const finales = new Map();
+        // Un comportamiento solo cumple el resultado final si cumple en ambas llamadas.
         for (const id of catalogos.comportamientos) {
             finales.set(id, datos.llamadas.every(function (llamada) {
                 return llamada.evaluaciones.get(id) === true;

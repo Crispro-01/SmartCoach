@@ -532,6 +532,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     function restaurarBorrador(contenido) {
+        // Recupera lo guardado sin exigir que los campos estén completos todavía.
+        // Los catálogos actuales permiten relacionar cada ID con su control del formulario.
         if (!contenido || contenido.agentId !== agenteId) {
             throw new Error("El borrador no corresponde a este agente.");
         }
@@ -664,6 +666,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         try {
             const contenido = construirPayloadCoaching();
+            // Informar draftId permite completar la misma sesión en lugar de crear otra.
             if (borradorId) contenido.draftId = borradorId;
             const respuesta = await fetch("/api/sesiones/coaching", {
                 method: "POST",
