@@ -45,6 +45,31 @@ body {
     padding: 40px;
 }
 
+/* En celular el formulario ocupa todo el ancho, debajo de una cabecera compacta. */
+@media (max-width: 900px) {
+    .contenedor-login { flex-direction: column; }
+    .contenedor-login .panel-marca,
+    .contenedor-login .panel-formulario {
+        width: 100%;
+        min-width: 0;
+        padding: 24px 20px;
+    }
+    .contenedor-login .panel-marca { text-align: center; }
+    .contenedor-login .panel-marca h1 { margin: 8px 0; font-size: 28px; }
+    .contenedor-login .panel-marca p { margin: 14px 0 0; }
+    .contenedor-login .imagen-equipo {
+        width: 100%;
+        max-width: 320px;
+        height: 140px;
+        margin-top: 8px;
+    }
+    .contenedor-login .tarjeta-login { min-width: 0; padding: 28px 24px; }
+    .contenedor-login .tarjeta-login h2 { font-size: 30px; overflow-wrap: anywhere; }
+    .contenedor-login .tarjeta-login h3 { font-size: 23px; margin-bottom: 28px; }
+    .contenedor-login .campo input { min-width: 0; }
+    .contenedor-login .texto-registro { line-height: 1.5; overflow-wrap: anywhere; }
+}
+
 /* TARJETA */
 
 .tarjeta-login {
