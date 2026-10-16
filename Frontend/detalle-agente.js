@@ -1,4 +1,4 @@
-const URL_API_AGENTE = "http://localhost:3000/api/agentes";
+const URL_API_AGENTE = "/api/agentes";
 
 function crearCelda(texto) {
     const celda = document.createElement("td");
@@ -19,8 +19,9 @@ function crearEtiquetaTipo(sesion) {
     return etiqueta;
 }
 
-function crearCeldaEstado(estado) {
+function crearCeldaEstado(sesion) {
     const celda = document.createElement("td");
+    const estado = sesion.estado;
 
     if (estado === "Completada") {
         const etiqueta = document.createElement("span");
@@ -29,6 +30,22 @@ function crearCeldaEstado(estado) {
         celda.append(etiqueta);
     } else {
         celda.textContent = estado || "—";
+    }
+
+    if (estado === "Borrador" && sesion.clase === "coaching") {
+        const enlace = document.createElement("a");
+        enlace.href = `formulario-coaching.html?agente=${encodeURIComponent(sesion.agenteId)}&tipo=Coaching&borrador=${encodeURIComponent(sesion.id)}`;
+        enlace.textContent = "Continuar borrador";
+        enlace.style.marginLeft = "0.75rem";
+        celda.append(enlace);
+    }
+
+    if (estado === "Completada" && sesion.clase === "coaching") {
+        const enlace = document.createElement("a");
+        enlace.href = `detalle-coaching.html?agente=${encodeURIComponent(sesion.agenteId)}&sesion=${encodeURIComponent(sesion.id)}`;
+        enlace.textContent = "Ver sesión";
+        enlace.style.marginLeft = "0.75rem";
+        celda.append(enlace);
     }
 
     return celda;
@@ -53,7 +70,7 @@ function mostrarHistorial(sesiones) {
 
         fila.append(crearCelda(sesion.fecha));
         celdaTipo.append(crearEtiquetaTipo(sesion));
-        fila.append(celdaTipo, crearCelda(sesion.tema), crearCeldaEstado(sesion.estado));
+        fila.append(celdaTipo, crearCelda(sesion.tema), crearCeldaEstado(sesion));
         cuerpo.append(fila);
     });
 }

@@ -1,5 +1,4 @@
-const URL_API_AGENTES = "http://localhost:3000/api/agentes";
-const COACH_DEMO_ID = "COACH001";
+const URL_API_AGENTES = "/api/agentes";
 
 function crearCelda(texto) {
     const celda = document.createElement("td");
@@ -50,8 +49,7 @@ async function cargarAgentes() {
     const lista = document.getElementById("listaAgentes");
 
     try {
-        const url = `${URL_API_AGENTES}?supervisorId=${encodeURIComponent(COACH_DEMO_ID)}`;
-        const respuesta = await fetch(url);
+        const respuesta = await fetch(URL_API_AGENTES);
 
         if (!respuesta.ok) {
             throw new Error("El servidor no pudo entregar la lista de agentes.");
