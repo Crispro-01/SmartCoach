@@ -17,6 +17,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     const tipoSesion = parametros.get("tipo");
     const fechaHoraInicio = parametros.get("inicio");
     let borradorId = parametros.get("borrador");
+    const botonDescartarBorrador = document.getElementById("descartarBorradorCoaching");
+    botonDescartarBorrador.hidden = !borradorId;
     const agenteNombre = agentes[agenteId];
     const formularioCoaching = document.getElementById("formularioCoaching");
 
@@ -393,6 +395,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             if (!borradorId) {
                 const claveAnterior = claveInicioCronometro;
                 borradorId = resultado.datos.sesionId;
+                botonDescartarBorrador.hidden = false;
                 claveInicioCronometro = `smartCoach:inicioCoaching:${agenteId}:${borradorId}`;
                 const inicioAnterior = window.localStorage.getItem(claveAnterior);
                 if (inicioAnterior) window.localStorage.setItem(claveInicioCronometro, inicioAnterior);
@@ -400,12 +403,38 @@ document.addEventListener("DOMContentLoaded", async function () {
                 parametros.set("borrador", borradorId);
                 window.history.replaceState(null, "", `${window.location.pathname}?${parametros.toString()}`);
             }
-            window.alert(`Borrador #${borradorId} guardado. Puedes volver a abrirlo desde el perfil del agente.`);
+            window.alert("La sesión se guardó como incompleta. Puedes continuarla desde el perfil del agente.");
         } catch (error) {
             console.error("No se pudo guardar el borrador:", error);
             window.alert(error.message || "No se pudo guardar el borrador. Verifica que el backend siga iniciado.");
         } finally {
             boton.disabled = false;
+        }
+    });
+
+    botonDescartarBorrador.addEventListener("click", async function () {
+        if (!borradorId || !window.confirm("¿Descartar esta sesión incompleta? Se eliminará el borrador.")) {
+            return;
+        }
+
+        botonDescartarBorrador.disabled = true;
+        const borradorDescartado = borradorId;
+        try {
+            const respuesta = await fetch(`/api/sesiones/coaching/borradores/${encodeURIComponent(borradorId)}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ agentId: agenteId })
+            });
+            const resultado = respuesta.status === 204 ? { estado: "ok" } : await respuesta.json();
+            if (!respuesta.ok || resultado.estado !== "ok") {
+                throw new Error(resultado.mensaje || "No se pudo descartar la sesión incompleta.");
+            }
+            window.localStorage.removeItem(`smartCoach:inicioCoaching:${agenteId}:${borradorDescartado}`);
+            window.location.href = `detalle-agente.html?id=${encodeURIComponent(agenteId)}`;
+        } catch (error) {
+            console.error("No se pudo descartar la sesión incompleta:", error);
+            window.alert(error.message || "No se pudo descartar la sesión incompleta.");
+            botonDescartarBorrador.disabled = false;
         }
     });
 
@@ -655,7 +684,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             window.alert(error.message || "No se pudo guardar la sesión. Verifica que el backend siga iniciado.");
         } finally {
             botonCompletar.disabled = false;
-            botonCompletar.textContent = "Completar sesión";
+            botonCompletar.textContent = "Completar";
         }
     });
 });

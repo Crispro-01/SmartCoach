@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { pool } from "../src/config/database.js";
 import {
     crearSesionCoaching,
-    actualizarBorradorCoaching
+    actualizarBorradorCoaching,
+    descartarBorradorCoaching
 } from "../src/controllers/coaching.controller.js";
 
 function respuestaDePrueba() {
@@ -211,6 +212,7 @@ function conexionParaEditarBorrador(estadoBorrador) {
                 return [[{ id: 23, estado: estadoBorrador, contenido: "{}" }]];
             }
             if (sql.startsWith("UPDATE sesiones SET borrador_json")) return [{ affectedRows: 1 }];
+            if (sql.startsWith("DELETE FROM sesiones")) return [{ affectedRows: 1 }];
             throw new Error("Consulta inesperada en la prueba: " + sql);
         },
         async commit() { estado.confirmada = true; },
@@ -263,6 +265,46 @@ test("una sesión completada no se puede editar como borrador", async function (
     assert.equal(respuesta.codigo, 409);
     assert.match(respuesta.cuerpo.mensaje, /ya no es un borrador/);
     assert.equal(prueba.consultas.some(({ sql }) => sql.startsWith("UPDATE sesiones SET borrador_json")), false);
+    assert.equal(prueba.estado.confirmada, false);
+    assert.equal(prueba.estado.revertida, true);
+    assert.equal(prueba.estado.liberada, true);
+});
+
+test("el Coach puede descartar su borrador incompleto", async function () {
+    const original = pool.getConnection;
+    const prueba = conexionParaEditarBorrador("BORRADOR");
+    pool.getConnection = async function () { return prueba.conexion; };
+    const respuesta = respuestaDePrueba();
+
+    try {
+        await descartarBorradorCoaching(solicitudParaEditarBorrador(), respuesta);
+    } finally {
+        pool.getConnection = original;
+    }
+
+    assert.equal(respuesta.codigo, 200);
+    assert.deepEqual(respuesta.cuerpo.datos, { sesionId: "23" });
+    assert.equal(prueba.consultas.some(({ sql }) => sql.startsWith("DELETE FROM sesiones")), true);
+    assert.equal(prueba.estado.confirmada, true);
+    assert.equal(prueba.estado.revertida, false);
+    assert.equal(prueba.estado.liberada, true);
+});
+
+test("una sesión completada no se puede descartar como borrador", async function () {
+    const original = pool.getConnection;
+    const prueba = conexionParaEditarBorrador("COMPLETADA");
+    pool.getConnection = async function () { return prueba.conexion; };
+    const respuesta = respuestaDePrueba();
+
+    try {
+        await descartarBorradorCoaching(solicitudParaEditarBorrador(), respuesta);
+    } finally {
+        pool.getConnection = original;
+    }
+
+    assert.equal(respuesta.codigo, 409);
+    assert.match(respuesta.cuerpo.mensaje, /ya no es un borrador/);
+    assert.equal(prueba.consultas.some(({ sql }) => sql.startsWith("DELETE FROM sesiones")), false);
     assert.equal(prueba.estado.confirmada, false);
     assert.equal(prueba.estado.revertida, true);
     assert.equal(prueba.estado.liberada, true);

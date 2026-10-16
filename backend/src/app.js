@@ -13,7 +13,7 @@ import rutasRevision from "./routes/revision.routes.js";
 const app = express();
 app.disable("x-powered-by");
 const carpetaFrontend = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../Frontend");
-const origenPermitido = `http://127.0.0.1:${configuracion.puerto}`;
+const origenPermitido = configuracion.origenPermitido;
 
 // Las páginas y la API usan el mismo origen local. Esto impide enviar la cookie
 // de sesión desde otra página y mantiene las operaciones de escritura dentro de Smart Coach.
@@ -39,6 +39,6 @@ app.use("/api/revision", exigirManager, rutasRevision);
 app.use("/Frontend", express.static(carpetaFrontend, { dotfiles: "deny", index: false }));
 app.get("/", function (solicitud, respuesta) { respuesta.redirect("/Frontend/index.html"); });
 
-export const servidor = app.listen(configuracion.puerto, "127.0.0.1", function () {
+export const servidor = app.listen(configuracion.puerto, configuracion.host, function () {
     console.log(`Servidor de Smart Coach disponible en ${origenPermitido}`);
 });

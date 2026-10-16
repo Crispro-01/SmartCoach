@@ -7,6 +7,8 @@ function convertirNumero(valor, valorPorDefecto) {
 
 export const configuracion = Object.freeze({
     puerto: convertirNumero(process.env.PORT, 3000),
+    host: process.env.HOST ?? "127.0.0.1",
+    origenPermitido: process.env.APP_ORIGIN ?? `http://127.0.0.1:${convertirNumero(process.env.PORT, 3000)}`,
     baseDatos: Object.freeze({
         host: process.env.DB_HOST ?? "localhost",
         port: convertirNumero(process.env.DB_PORT, 3306),

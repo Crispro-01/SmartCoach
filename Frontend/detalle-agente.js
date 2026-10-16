@@ -28,6 +28,11 @@ function crearCeldaEstado(sesion) {
         etiqueta.className = "estado-completada";
         etiqueta.textContent = estado;
         celda.append(etiqueta);
+    } else if (estado === "Borrador") {
+        const etiqueta = document.createElement("span");
+        etiqueta.className = "estado-incompleta";
+        etiqueta.textContent = "Incompleta";
+        celda.append(etiqueta);
     } else {
         celda.textContent = estado || "—";
     }
@@ -35,7 +40,8 @@ function crearCeldaEstado(sesion) {
     if (estado === "Borrador" && sesion.clase === "coaching") {
         const enlace = document.createElement("a");
         enlace.href = `formulario-coaching.html?agente=${encodeURIComponent(sesion.agenteId)}&tipo=Coaching&borrador=${encodeURIComponent(sesion.id)}`;
-        enlace.textContent = "Continuar borrador";
+        enlace.className = "boton-secundario boton-continuar enlace-boton accion-sesion";
+        enlace.textContent = "Continuar";
         enlace.style.marginLeft = "0.75rem";
         celda.append(enlace);
     }
@@ -43,7 +49,8 @@ function crearCeldaEstado(sesion) {
     if (estado === "Completada" && sesion.clase === "coaching") {
         const enlace = document.createElement("a");
         enlace.href = `detalle-coaching.html?agente=${encodeURIComponent(sesion.agenteId)}&sesion=${encodeURIComponent(sesion.id)}`;
-        enlace.textContent = "Ver sesión";
+        enlace.className = "boton-principal enlace-boton accion-sesion";
+        enlace.textContent = "Ver";
         enlace.style.marginLeft = "0.75rem";
         celda.append(enlace);
     }

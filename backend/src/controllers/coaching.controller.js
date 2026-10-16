@@ -162,6 +162,32 @@ export async function actualizarBorradorCoaching(solicitud, respuesta) {
     }
 }
 
+export async function descartarBorradorCoaching(solicitud, respuesta) {
+    let conexion;
+    let iniciada = false;
+    try {
+        conexion = await pool.getConnection();
+        await conexion.beginTransaction();
+        iniciada = true;
+
+        const agente = await consultarAgenteAsignado(conexion, solicitud.body?.agentId, solicitud.usuario.employeeId);
+        const borrador = await consultarBorrador(conexion, solicitud.params.id, agente, true);
+        await conexion.execute("DELETE FROM sesiones WHERE sesion_id = ?", [borrador.id]);
+        await conexion.commit();
+        iniciada = false;
+        return respuesta.json({ estado: "ok", datos: { sesionId: String(borrador.id) } });
+    } catch (error) {
+        if (iniciada && conexion) {
+            try { await conexion.rollback(); } catch (errorRollback) {
+                console.error("No se pudo revertir el descarte del borrador:", errorRollback.message);
+            }
+        }
+        return responderError(respuesta, error, "descartar");
+    } finally {
+        if (conexion) conexion.release();
+    }
+}
+
 function normalizar(cuerpo, catalogos) {
     if (!cuerpo || typeof cuerpo !== "object" || Array.isArray(cuerpo)) {
         throw new ErrorSolicitud("El contenido de la sesión no es válido.");

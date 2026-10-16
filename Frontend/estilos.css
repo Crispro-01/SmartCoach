@@ -679,6 +679,25 @@ body {
     font-weight: bold;
 }
 
+.estado-incompleta {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 20px;
+    background-color: #FEF3C7;
+    color: #92400E;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.accion-sesion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 64px;
+    padding: 9px 16px;
+    vertical-align: middle;
+}
+
 /* FORMULARIO CORRECTIVO */
 
 .tarjeta-correctiva {
@@ -1339,6 +1358,46 @@ body {
 
 .boton-borrador {
     cursor: pointer;
+    border-color: #EAB308;
+    background-color: #FACC15;
+    color: #713F12;
+}
+
+.boton-borrador:hover {
+    background-color: #EAB308;
+}
+
+.boton-continuar {
+    border-color: #EAB308;
+    background-color: #FACC15;
+    color: #713F12;
+}
+
+.boton-continuar:hover {
+    background-color: #EAB308;
+}
+
+.boton-descartar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    color: #B91C1C;
+}
+
+.boton-descartar[hidden] {
+    display: none;
+}
+
+.boton-descartar svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
 }
 
 @media (max-width: 760px) {
