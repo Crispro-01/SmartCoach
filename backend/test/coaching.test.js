@@ -53,7 +53,7 @@ function solicitudDePrueba() {
     };
 }
 
-function conexionDePrueba({ fallarEnRca = false } = {}) {
+function conexionDePrueba({ fallarEnRca = false, convertirBorrador = false } = {}) {
     const consultas = [];
     const estado = { iniciada: false, confirmada: false, revertida: false, liberada: false };
     let siguienteLlamadaId = 100;
@@ -81,7 +81,11 @@ function conexionDePrueba({ fallarEnRca = false } = {}) {
             if (sql === "SELECT estado_sesion_id FROM estados_sesion WHERE codigo = 'COMPLETADA'") {
                 return [[{ estado_sesion_id: 3 }]];
             }
+            if (convertirBorrador && sql.startsWith("SELECT s.sesion_id AS id")) {
+                return [[{ id: 23, estado: "BORRADOR", contenido: "{}" }]];
+            }
             if (sql.startsWith("INSERT INTO sesiones")) return [{ insertId: 77 }];
+            if (sql.startsWith("UPDATE sesiones SET estado_sesion_id")) return [{ affectedRows: 1 }];
             if (sql.startsWith("INSERT INTO coaching_llamadas")) {
                 siguienteLlamadaId += 1;
                 return [{ insertId: siguienteLlamadaId }];
@@ -164,6 +168,32 @@ test("una sesión incompleta se rechaza antes de insertar datos", async function
     assert.equal(prueba.consultas.some(({ sql }) => sql.startsWith("INSERT INTO ")), false);
     assert.equal(prueba.estado.confirmada, false);
     assert.equal(prueba.estado.revertida, true);
+    assert.equal(prueba.estado.liberada, true);
+});
+
+test("completar un borrador conserva su ID y guarda sus detalles en la misma transacción", async function () {
+    const original = pool.getConnection;
+    const prueba = conexionDePrueba({ convertirBorrador: true });
+    pool.getConnection = async function () { return prueba.conexion; };
+    const solicitud = solicitudDePrueba();
+    solicitud.body.draftId = "23";
+    const respuesta = respuestaDePrueba();
+
+    try {
+        await crearSesionCoaching(solicitud, respuesta);
+    } finally {
+        pool.getConnection = original;
+    }
+
+    assert.equal(respuesta.codigo, 201);
+    assert.deepEqual(respuesta.cuerpo.datos, { sesionId: "23" });
+    const actualizacion = prueba.consultas.find(({ sql }) => sql.startsWith("UPDATE sesiones SET estado_sesion_id"));
+    assert.ok(actualizacion);
+    assert.equal(actualizacion.parametros.at(-1), 23);
+    assert.equal(prueba.consultas.some(({ sql }) => sql.startsWith("INSERT INTO sesiones")), false);
+    assert.equal(prueba.consultas.some(({ sql }) => sql.startsWith("INSERT INTO coaching_rca")), true);
+    assert.equal(prueba.estado.confirmada, true);
+    assert.equal(prueba.estado.revertida, false);
     assert.equal(prueba.estado.liberada, true);
 });
 
