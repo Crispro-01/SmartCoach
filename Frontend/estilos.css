@@ -665,13 +665,19 @@ body {
     padding: 24px;
 }
 
-.historial-agente .tabla-agentes th:first-child { width: 30%; }
+.historial-agente .tabla-agentes th:first-child { width: 25%; }
 .historial-agente .tabla-agentes th:nth-child(2) { width: 30%; }
-.historial-agente .tabla-agentes th:last-child,
-.historial-agente .tabla-agentes td:last-child {
-    width: 40%;
+.historial-agente .tabla-agentes th:nth-child(3),
+.historial-agente .tabla-agentes td:nth-child(3) {
+    width: 22%;
     text-align: center;
 }
+.historial-agente .tabla-agentes th:last-child,
+.historial-agente .tabla-agentes td:last-child {
+    width: 23%;
+    text-align: right;
+}
+.historial-agente .tabla-agentes td:last-child { padding-right: 24px; }
 
 .contenedor-tabla {
     overflow-x: auto;
@@ -706,13 +712,6 @@ body {
     min-width: 0;
     box-sizing: border-box;
     padding: 9px 12px;
-}
-
-.grupo-estado-sesion {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
 }
 
 /* FORMULARIO CORRECTIVO */

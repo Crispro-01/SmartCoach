@@ -21,42 +21,44 @@ function crearEtiquetaTipo(sesion) {
 
 function crearCeldaEstado(sesion) {
     const celda = document.createElement("td");
-    const grupo = document.createElement("div");
-    grupo.className = "grupo-estado-sesion";
     const estado = sesion.estado;
 
     if (estado === "Completada") {
         const etiqueta = document.createElement("span");
         etiqueta.className = "estado-completada";
         etiqueta.textContent = estado;
-        grupo.append(etiqueta);
+        celda.append(etiqueta);
     } else if (estado === "Borrador") {
         const etiqueta = document.createElement("span");
         etiqueta.className = "estado-incompleta";
         etiqueta.textContent = "Incompleta";
-        grupo.append(etiqueta);
+        celda.append(etiqueta);
     } else {
         celda.textContent = estado || "—";
-        return celda;
     }
 
-    if (estado === "Borrador" && sesion.clase === "coaching") {
+    return celda;
+}
+
+function crearCeldaAccion(sesion) {
+    const celda = document.createElement("td");
+
+    if (sesion.estado === "Borrador" && sesion.clase === "coaching") {
         const enlace = document.createElement("a");
         enlace.href = `formulario-coaching.html?agente=${encodeURIComponent(sesion.agenteId)}&tipo=Coaching&borrador=${encodeURIComponent(sesion.id)}`;
         enlace.className = "boton-principal enlace-boton accion-sesion";
         enlace.textContent = "Continuar";
-        grupo.append(enlace);
+        celda.append(enlace);
     }
 
-    if (estado === "Completada" && sesion.clase === "coaching") {
+    if (sesion.estado === "Completada" && sesion.clase === "coaching") {
         const enlace = document.createElement("a");
         enlace.href = `detalle-coaching.html?agente=${encodeURIComponent(sesion.agenteId)}&sesion=${encodeURIComponent(sesion.id)}`;
         enlace.className = "boton-principal enlace-boton accion-sesion";
         enlace.textContent = "Ver";
-        grupo.append(enlace);
+        celda.append(enlace);
     }
 
-    celda.append(grupo);
     return celda;
 }
 
@@ -67,7 +69,7 @@ function mostrarHistorial(sesiones) {
     if (sesiones.length === 0) {
         const fila = document.createElement("tr");
         const celda = crearCelda("Este agente todavía no tiene sesiones registradas.");
-        celda.colSpan = 3;
+        celda.colSpan = 4;
         fila.append(celda);
         cuerpo.append(fila);
         return;
@@ -79,7 +81,7 @@ function mostrarHistorial(sesiones) {
 
         fila.append(crearCelda(sesion.fecha));
         celdaTipo.append(crearEtiquetaTipo(sesion));
-        fila.append(celdaTipo, crearCeldaEstado(sesion));
+        fila.append(celdaTipo, crearCeldaEstado(sesion), crearCeldaAccion(sesion));
         cuerpo.append(fila);
     });
 }
