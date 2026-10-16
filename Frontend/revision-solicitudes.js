@@ -68,7 +68,7 @@ function mostrarSolicitud(solicitud, destino) {
                 return;
             }
             if (decision === "APROBADA" && !window.confirm(
-                "Esta aprobación ocultará el Coaching del historial normal, pero lo conservará en MySQL. ¿Continuar?"
+                "Al aprobar, esta sesión dejará de aparecer en el historial habitual del Coach. El Manager podrá consultarla en las solicitudes revisadas. ¿Deseas continuar?"
             )) return;
             rechazar.disabled = true;
             aprobar.disabled = true;
