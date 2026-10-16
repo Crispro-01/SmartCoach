@@ -73,7 +73,7 @@ function mostrarSolicitudEliminacion(sesionId, solicitud, destino) {
     tarjeta.classList.add("solicitud-eliminacion");
     const aclaracion = document.createElement("p");
     aclaracion.textContent = esRevision
-        ? "Esta sesión se conserva en MySQL aunque se apruebe su solicitud de eliminación."
+        ? "La sesión y las decisiones de revisión se conservan para su consulta y trazabilidad."
         : "Enviar una solicitud no borra la sesión. Quedará registrada con tu identidad y motivo para una revisión posterior.";
     tarjeta.append(aclaracion);
 
