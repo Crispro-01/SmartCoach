@@ -15,11 +15,23 @@ app.disable("x-powered-by");
 const carpetaFrontend = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../Frontend");
 const origenPermitido = configuracion.origenPermitido;
 
+function esMismoOrigen(solicitud) {
+    const origen = solicitud.get("origin");
+    if (!origen) return false;
+
+    try {
+        const urlOrigen = new URL(origen);
+        return urlOrigen.origin === `${solicitud.protocol}://${solicitud.get("host")}`;
+    } catch {
+        return false;
+    }
+}
+
 // Las páginas y la API usan el mismo origen local. Esto impide enviar la cookie
 // de sesión desde otra página y mantiene las operaciones de escritura dentro de Smart Coach.
 app.use(function (solicitud, respuesta, siguiente) {
     if (["POST", "PUT", "PATCH", "DELETE"].includes(solicitud.method) &&
-        solicitud.get("origin") !== origenPermitido) {
+        solicitud.get("origin") !== origenPermitido && !esMismoOrigen(solicitud)) {
         return respuesta.status(403).json({ estado: "error", mensaje: "Origen no permitido." });
     }
     return siguiente();

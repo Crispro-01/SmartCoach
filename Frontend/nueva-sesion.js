@@ -63,6 +63,6 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        window.alert("El tipo de sesión seleccionado no está disponible.");
+        window.smartCoachAlert("El tipo de sesión seleccionado no está disponible.");
     });
 });

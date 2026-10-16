@@ -12,10 +12,10 @@ function mostrarSolicitud(solicitud, destino) {
     const tarjeta = document.createElement("article");
     tarjeta.className = "tarjeta-detalle-coaching solicitud-revision";
     const titulo = document.createElement("h3");
-    titulo.textContent = `Solicitud #${solicitud.id} · ${solicitud.estado}`;
+    titulo.textContent = `Solicitud de eliminación · ${solicitud.estado}`;
     const campos = document.createElement("dl");
     campos.className = "campos-detalle-coaching";
-    agregarCampo(campos, "Sesión", `#${solicitud.sesionId} · ${solicitud.tema}`);
+    agregarCampo(campos, "Sesión", solicitud.tema);
     agregarCampo(campos, "Agente", `${solicitud.agenteNombre} (${solicitud.agenteId})`);
     agregarCampo(campos, "Coach solicitante", `${solicitud.coachNombre} (${solicitud.coachId})`);
     agregarCampo(campos, "Fecha", solicitud.fechaSolicitud);
@@ -67,7 +67,7 @@ function mostrarSolicitud(solicitud, destino) {
                 mensaje.textContent = "Selecciona Aprobar o Rechazar.";
                 return;
             }
-            if (decision === "APROBADA" && !window.confirm(
+            if (decision === "APROBADA" && !await window.smartCoachConfirm(
                 "Al aprobar, esta sesión dejará de aparecer en el historial habitual del Coach. El Manager podrá consultarla en las solicitudes revisadas. ¿Deseas continuar?"
             )) return;
             rechazar.disabled = true;

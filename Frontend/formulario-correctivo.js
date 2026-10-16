@@ -36,6 +36,6 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        window.alert("La sesión correctiva está lista para enviarse al backend.");
+        window.smartCoachAlert("La sesión correctiva está lista para enviarse al backend.");
     });
 });

@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         tiposSeguimiento = resultadoCatalogos.datos.tiposSeguimiento;
     } catch (error) {
         console.error("Error al cargar los catálogos de Coaching:", error.message);
-        window.alert("No se pudieron cargar las opciones de Coaching. Verifica que el backend esté iniciado e inténtalo de nuevo.");
+        window.smartCoachAlert("No se pudieron cargar las opciones de Coaching. Verifica que el backend esté iniciado e inténtalo de nuevo.");
         return;
     }
 
@@ -368,7 +368,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.getElementById("guardarBorradorCoaching").addEventListener("click", async function () {
         sincronizarDetalleCoaching();
         if (archivosCoaching.files.length > 0) {
-            window.alert("Los adjuntos todavía no se guardan. Quita los archivos seleccionados antes de guardar el borrador.");
+            window.smartCoachAlert("Los adjuntos todavía no se guardan. Quita los archivos seleccionados antes de guardar el borrador.");
             return;
         }
 
@@ -401,20 +401,17 @@ document.addEventListener("DOMContentLoaded", async function () {
                 parametros.set("borrador", borradorId);
                 window.history.replaceState(null, "", `${window.location.pathname}?${parametros.toString()}`);
             }
-            window.alert("La sesión se guardó como incompleta. Puedes continuarla desde el perfil del agente.");
+            window.location.href = `detalle-agente.html?id=${encodeURIComponent(agenteId)}`;
         } catch (error) {
             console.error("No se pudo guardar el borrador:", error);
-            window.alert(error.message || "No se pudo guardar el borrador. Verifica que el backend siga iniciado.");
+            window.smartCoachAlert(error.message || "No se pudo guardar el borrador. Verifica que el backend siga iniciado.");
         } finally {
             boton.disabled = false;
         }
     });
 
     botonDescartarSesion.addEventListener("click", async function () {
-        const confirmacion = borradorId
-            ? "¿Descartar esta sesión incompleta? Se eliminará el borrador guardado."
-            : "¿Descartar esta sesión sin guardar y volver al historial? Se perderán los datos ingresados.";
-        if (!window.confirm(confirmacion)) {
+        if (!await window.smartCoachConfirm("¿Confirmas que quieres descartar esta sesión?")) {
             return;
         }
 
@@ -435,7 +432,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             window.location.href = `detalle-agente.html?id=${encodeURIComponent(agenteId)}`;
         } catch (error) {
             console.error("No se pudo descartar la sesión:", error);
-            window.alert(error.message || "No se pudo descartar la sesión.");
+            window.smartCoachAlert(error.message || "No se pudo descartar la sesión.");
             botonDescartarSesion.disabled = false;
         }
     });
@@ -633,7 +630,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             restaurarBorrador(resultado.datos.contenido);
         } catch (error) {
             console.error("No se pudo abrir el borrador:", error);
-            window.alert(error.message || "No se pudo abrir el borrador.");
+            await window.smartCoachAlert(error.message || "No se pudo abrir el borrador.");
             window.location.href = `detalle-agente.html?id=${encodeURIComponent(agenteId)}`;
             return;
         }
@@ -657,7 +654,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
 
         if (archivosCoaching.files.length > 0) {
-            window.alert("El guardado de adjuntos todavía no está habilitado. Quita los archivos seleccionados antes de completar esta sesión.");
+            window.smartCoachAlert("El guardado de adjuntos todavía no está habilitado. Quita los archivos seleccionados antes de completar esta sesión.");
             return;
         }
 
@@ -679,11 +676,11 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
 
             window.localStorage.removeItem(claveInicioCronometro);
-            window.alert("Sesión de Coaching #" + resultado.datos.sesionId + " guardada y completada.");
+            await window.smartCoachAlert("Sesión de Coaching guardada y completada.");
             window.location.href = "detalle-agente.html?id=" + encodeURIComponent(agenteId);
         } catch (error) {
             console.error("No se pudo guardar la sesión de Coaching:", error);
-            window.alert(error.message || "No se pudo guardar la sesión. Verifica que el backend siga iniciado.");
+            window.smartCoachAlert(error.message || "No se pudo guardar la sesión. Verifica que el backend siga iniciado.");
         } finally {
             botonCompletar.disabled = false;
             botonCompletar.textContent = "Completar";

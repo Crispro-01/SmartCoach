@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .catch(function () {
             dashboard.style.visibility = "visible";
-            window.alert("No se pudo comprobar tu acceso. Revisa que Smart Coach esté iniciado.");
+            window.smartCoachAlert("No se pudo comprobar tu acceso. Revisa que Smart Coach esté iniciado.");
         });
 
     const cerrarSesion = Array.from(document.querySelectorAll(".navegacion-menu a"))

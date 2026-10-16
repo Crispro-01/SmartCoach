@@ -64,7 +64,6 @@ function tablaEvaluaciones(titulo, evaluaciones, destino, campoResultado) {
 
 function mostrarSolicitudEliminacion(sesionId, solicitud, destino) {
     const campos = solicitud ? [
-        ["Número de solicitud", solicitud.id],
         ["Estado", solicitud.estado],
         ["Fecha de solicitud", solicitud.fechaSolicitud],
         ["Motivo registrado", solicitud.motivo]
@@ -160,10 +159,9 @@ function mostrarSesion(datos) {
     const destino = document.getElementById("contenidoSesion");
     const { sesion, detalles, llamadas, resultados, kpi, compromisos, rca, solicitudEliminacion } = datos;
     destino.replaceChildren();
-    document.title = `Smart Coach - Coaching #${sesion.id}`;
+    document.title = "Smart Coach - Detalle de Coaching";
 
     seccion("Datos de la sesión", [
-        ["Número de sesión guardada", sesion.id],
         ["Agente", `${sesion.agenteNombre} (${sesion.agenteId})`],
         ["Coach", `${sesion.coachNombre} (${sesion.coachId})`],
         ["Tema", sesion.tema],
@@ -171,8 +169,6 @@ function mostrarSesion(datos) {
         ["Completada", sesion.fechaCompletada],
         ["Duración", sesion.duracionSegundos === null ? null : `${sesion.duracionSegundos} segundos`]
     ], destino);
-
-    mostrarSolicitudEliminacion(sesion.id, solicitudEliminacion, destino);
 
     if (detalles) seccion("Seguimiento del comportamiento", [
         ["Apertura del comportamiento", siNo(detalles.apertura)],
@@ -222,6 +218,8 @@ function mostrarSesion(datos) {
         ["Cambio en KPI", rca.cambioKpi],
         ["Cambio en comportamiento", rca.cambioComportamiento]
     ], destino);
+
+    mostrarSolicitudEliminacion(sesion.id, solicitudEliminacion, destino);
 
     document.getElementById("estadoConsulta").hidden = true;
     destino.hidden = false;

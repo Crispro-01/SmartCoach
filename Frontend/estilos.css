@@ -672,7 +672,10 @@ body {
     width: 22%;
     text-align: center;
 }
-.historial-agente .tabla-agentes th:last-child,
+.historial-agente .tabla-agentes th:last-child {
+    width: 23%;
+    text-align: center;
+}
 .historial-agente .tabla-agentes td:last-child {
     width: 23%;
     text-align: right;
@@ -1403,6 +1406,47 @@ body {
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 1.8;
+}
+
+.dialogo-smartcoach {
+    width: min(440px, calc(100% - 32px));
+    padding: 26px;
+    border: 0;
+    border-radius: 14px;
+    color: #0F172A;
+    box-shadow: 0 18px 50px rgba(15, 23, 42, 0.3);
+}
+
+.dialogo-smartcoach::backdrop {
+    background: rgba(15, 23, 42, 0.58);
+}
+
+.dialogo-smartcoach h2 {
+    margin: 0;
+    color: #0F172A;
+    font-size: 20px;
+}
+
+.dialogo-smartcoach p {
+    margin: 18px 0 24px;
+    color: #334155;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.acciones-dialogo-smartcoach {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.acciones-dialogo-smartcoach button {
+    cursor: pointer;
+}
+
+.dialogo-smartcoach button:focus-visible {
+    outline: 3px solid #93C5FD;
+    outline-offset: 2px;
 }
 
 @media (max-width: 760px) {
