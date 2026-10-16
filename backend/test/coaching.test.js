@@ -131,6 +131,91 @@ test("guardar Coaching persiste todos sus bloques en una transacción", async fu
     }
 });
 
+async function ejecutarSesionConfigurada(configurar) {
+    const original = pool.getConnection;
+    const prueba = conexionDePrueba();
+    const solicitud = solicitudDePrueba();
+    configurar(solicitud.body);
+    const respuesta = respuestaDePrueba();
+    pool.getConnection = async function () { return prueba.conexion; };
+    try {
+        await crearSesionCoaching(solicitud, respuesta);
+    } finally {
+        pool.getConnection = original;
+    }
+    return { prueba, respuesta };
+}
+
+test("los límites numéricos se validan antes de escribir la sesión", async function () {
+    const casos = [
+        { nombre: "sesión cero", configurar: cuerpo => { cuerpo.sessionNumber = 0; }, mensaje: /número de sesión/ },
+        { nombre: "sesión fraccionaria", configurar: cuerpo => { cuerpo.sessionNumber = 1.5; }, mensaje: /número de sesión/ },
+        { nombre: "sesión fuera de rango", configurar: cuerpo => { cuerpo.sessionNumber = 65536; }, mensaje: /número de sesión/ },
+        { nombre: "KPI no numérico", configurar: cuerpo => { cuerpo.kpi.resultMtd = "abc"; }, mensaje: /resultado MTD/ },
+        { nombre: "KPI con cinco decimales", configurar: cuerpo => { cuerpo.kpi.resultMtd = "12.12345"; }, mensaje: /resultado MTD/ },
+        { nombre: "KPI fuera de rango", configurar: cuerpo => { cuerpo.kpi.currentResult = "100000000"; }, mensaje: /resultado actual/ },
+        {
+            nombre: "meta anterior vacía en seguimiento",
+            configurar: cuerpo => { cuerpo.opening = false; cuerpo.kpi.previousGoal = ""; },
+            mensaje: /meta anterior/
+        }
+    ];
+    for (const caso of casos) {
+        const { prueba, respuesta } = await ejecutarSesionConfigurada(caso.configurar);
+        assert.equal(respuesta.codigo, 400, caso.nombre);
+        assert.match(respuesta.cuerpo.mensaje, caso.mensaje, caso.nombre);
+        assert.equal(prueba.consultas.some(({ sql }) => /^(INSERT|UPDATE|DELETE) /.test(sql)), false, caso.nombre);
+        assert.equal(prueba.estado.confirmada, false, caso.nombre);
+        assert.equal(prueba.estado.revertida, true, caso.nombre);
+        assert.equal(prueba.estado.liberada, true, caso.nombre);
+    }
+});
+
+test("los textos vacíos o demasiado largos no generan registros parciales", async function () {
+    const casos = [
+        { nombre: "Contact ID con espacios", configurar: cuerpo => { cuerpo.calls[0].contactId = "   "; }, mensaje: /Contact ID/ },
+        { nombre: "Contact ID de 81 caracteres", configurar: cuerpo => { cuerpo.calls[0].contactId = "A".repeat(81); }, mensaje: /Contact ID/ },
+        { nombre: "resumen de 5001 caracteres", configurar: cuerpo => { cuerpo.calls[1].summary = "A".repeat(5001); }, mensaje: /resumen de llamada 2/ },
+        { nombre: "compromiso ausente", configurar: cuerpo => { delete cuerpo.commitments.coach.what; }, mensaje: /compromiso del Coach: qué/ }
+    ];
+    for (const caso of casos) {
+        const { prueba, respuesta } = await ejecutarSesionConfigurada(caso.configurar);
+        assert.equal(respuesta.codigo, 400, caso.nombre);
+        assert.match(respuesta.cuerpo.mensaje, caso.mensaje, caso.nombre);
+        assert.equal(prueba.consultas.some(({ sql }) => /^(INSERT|UPDATE|DELETE) /.test(sql)), false, caso.nombre);
+        assert.equal(prueba.estado.confirmada, false, caso.nombre);
+        assert.equal(prueba.estado.revertida, true, caso.nombre);
+        assert.equal(prueba.estado.liberada, true, caso.nombre);
+    }
+});
+
+test("se aceptan los límites permitidos y los caracteres especiales se envían como parámetros", async function () {
+    const resumen = "Atención a José O'Neil: <prueba> & \"comillas\"; 100%.";
+    const { prueba, respuesta } = await ejecutarSesionConfigurada(function (cuerpo) {
+        cuerpo.opening = false;
+        cuerpo.sessionNumber = 65535;
+        cuerpo.calls[0].contactId = "Á".repeat(80);
+        cuerpo.calls[0].summary = resumen;
+        cuerpo.kpi.resultMtd = "99999999.9999";
+        cuerpo.kpi.previousGoal = "0";
+        cuerpo.kpi.currentResult = "-99999999.9999";
+        cuerpo.kpi.nextGoal = "0.0001";
+    });
+
+    assert.equal(respuesta.codigo, 201);
+    assert.equal(prueba.estado.confirmada, true);
+    assert.equal(prueba.estado.revertida, false);
+    assert.equal(prueba.estado.liberada, true);
+    const detalle = prueba.consultas.find(({ sql }) => sql.startsWith("INSERT INTO coaching_detalles"));
+    assert.equal(detalle.parametros[3], 65535);
+    const llamada = prueba.consultas.find(({ sql }) => sql.startsWith("INSERT INTO coaching_llamadas"));
+    assert.equal(llamada.parametros[2], "Á".repeat(80));
+    assert.equal(llamada.parametros[4], resumen);
+    assert.equal(llamada.sql.includes(resumen), false);
+    const kpi = prueba.consultas.find(({ sql }) => sql.startsWith("INSERT INTO coaching_kpis"));
+    assert.deepEqual(kpi.parametros, [77, 1, 99999999.9999, 0, -99999999.9999, false, 0.0001]);
+});
+
 test("si falla un bloque del Coaching se revierte toda la transacción", async function () {
     const original = pool.getConnection;
     const prueba = conexionDePrueba({ fallarEnRca: true });

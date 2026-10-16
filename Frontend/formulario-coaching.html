@@ -100,7 +100,7 @@
                                 </div>
                                 <div class="campo">
                                     <label for="numeroSesionCoaching">Número de sesión *</label>
-                                    <input type="number" id="numeroSesionCoaching" min="1" placeholder="Ejemplo: 3" required>
+                                    <input type="number" id="numeroSesionCoaching" min="1" max="65535" step="1" placeholder="Ejemplo: 3" required>
                                     <input type="hidden" id="numeroSesionValor" name="sessionNumber">
                                 </div>
                             </div>
@@ -219,15 +219,15 @@
                                 </div>
                                 <div class="campo">
                                     <label for="resultadoMtd">Resultado del mes actual (MTD) *</label>
-                                    <input type="number" id="resultadoMtd" name="kpiResultMTD" class="numero-manual" step="any" inputmode="decimal" required>
+                                    <input type="number" id="resultadoMtd" name="kpiResultMTD" class="numero-manual" min="-99999999.9999" max="99999999.9999" step="0.0001" inputmode="decimal" required>
                                 </div>
                                 <div class="campo" id="contenedorMetaCoachingAnterior" hidden>
                                     <label for="metaCoachingAnterior">Meta acordada en el Coaching anterior *</label>
-                                    <input type="number" id="metaCoachingAnterior" name="previousCoachingGoal" class="numero-manual" step="any" inputmode="decimal" disabled>
+                                    <input type="number" id="metaCoachingAnterior" name="previousCoachingGoal" class="numero-manual" min="-99999999.9999" max="99999999.9999" step="0.0001" inputmode="decimal" disabled>
                                 </div>
                                 <div class="campo">
                                     <label for="resultadoActual">Resultado actual *</label>
-                                    <input type="number" id="resultadoActual" name="kpiCurrentResult" class="numero-manual" step="any" inputmode="decimal" required>
+                                    <input type="number" id="resultadoActual" name="kpiCurrentResult" class="numero-manual" min="-99999999.9999" max="99999999.9999" step="0.0001" inputmode="decimal" required>
                                 </div>
                             </div>
                             <div id="contenedorResultadoMejora" hidden>
@@ -239,7 +239,7 @@
                             </div>
                             <div class="campo campo-meta-siguiente">
                                 <label for="metaKpi">Meta para la siguiente semana *</label>
-                                <input type="number" id="metaKpi" name="kpiGoalNextWeek" class="numero-manual" step="any" inputmode="decimal" required>
+                                    <input type="number" id="metaKpi" name="kpiGoalNextWeek" class="numero-manual" min="-99999999.9999" max="99999999.9999" step="0.0001" inputmode="decimal" required>
                             </div>
                         </div>
                     </details>
