@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { pool } from "../src/config/database.js";
-import { crearSesionCoaching } from "../src/controllers/coaching.controller.js";
+import {
+    crearSesionCoaching,
+    actualizarBorradorCoaching
+} from "../src/controllers/coaching.controller.js";
 
 function respuestaDePrueba() {
     return {
@@ -137,6 +140,77 @@ test("si falla un bloque del Coaching se revierte toda la transacción", async f
 
     assert.equal(respuesta.codigo, 500);
     assert.equal(respuesta.cuerpo.estado, "error");
+    assert.equal(prueba.estado.confirmada, false);
+    assert.equal(prueba.estado.revertida, true);
+    assert.equal(prueba.estado.liberada, true);
+});
+
+function conexionParaEditarBorrador(estadoBorrador) {
+    const consultas = [];
+    const estado = { iniciada: false, confirmada: false, revertida: false, liberada: false };
+    const conexion = {
+        async beginTransaction() { estado.iniciada = true; },
+        async execute(sql, parametros = []) {
+            consultas.push({ sql, parametros });
+            if (sql.startsWith("SELECT a.employee_id")) {
+                return [[{ agenteId: "TM001", coachId: "COACH001" }]];
+            }
+            if (sql.startsWith("SELECT s.sesion_id AS id")) {
+                return [[{ id: 23, estado: estadoBorrador, contenido: "{}" }]];
+            }
+            if (sql.startsWith("UPDATE sesiones SET borrador_json")) return [{ affectedRows: 1 }];
+            throw new Error("Consulta inesperada en la prueba: " + sql);
+        },
+        async commit() { estado.confirmada = true; },
+        async rollback() { estado.revertida = true; },
+        release() { estado.liberada = true; }
+    };
+    return { conexion, consultas, estado };
+}
+
+function solicitudParaEditarBorrador() {
+    return {
+        params: { id: "23" },
+        body: { agentId: "TM001", tema: "Seguimiento actualizado" },
+        usuario: { employeeId: "COACH001" }
+    };
+}
+
+test("el Coach puede actualizar el contenido de un borrador propio", async function () {
+    const original = pool.getConnection;
+    const prueba = conexionParaEditarBorrador("BORRADOR");
+    pool.getConnection = async function () { return prueba.conexion; };
+    const respuesta = respuestaDePrueba();
+
+    try {
+        await actualizarBorradorCoaching(solicitudParaEditarBorrador(), respuesta);
+    } finally {
+        pool.getConnection = original;
+    }
+
+    assert.equal(respuesta.codigo, 200);
+    assert.deepEqual(respuesta.cuerpo.datos, { sesionId: "23" });
+    assert.equal(prueba.consultas.some(({ sql }) => sql.startsWith("UPDATE sesiones SET borrador_json")), true);
+    assert.equal(prueba.estado.confirmada, true);
+    assert.equal(prueba.estado.revertida, false);
+    assert.equal(prueba.estado.liberada, true);
+});
+
+test("una sesión completada no se puede editar como borrador", async function () {
+    const original = pool.getConnection;
+    const prueba = conexionParaEditarBorrador("COMPLETADA");
+    pool.getConnection = async function () { return prueba.conexion; };
+    const respuesta = respuestaDePrueba();
+
+    try {
+        await actualizarBorradorCoaching(solicitudParaEditarBorrador(), respuesta);
+    } finally {
+        pool.getConnection = original;
+    }
+
+    assert.equal(respuesta.codigo, 409);
+    assert.match(respuesta.cuerpo.mensaje, /ya no es un borrador/);
+    assert.equal(prueba.consultas.some(({ sql }) => sql.startsWith("UPDATE sesiones SET borrador_json")), false);
     assert.equal(prueba.estado.confirmada, false);
     assert.equal(prueba.estado.revertida, true);
     assert.equal(prueba.estado.liberada, true);
