@@ -82,6 +82,9 @@ function mostrarHistorial(sesiones) {
         fila.append(crearCelda(sesion.fecha));
         celdaTipo.append(crearEtiquetaTipo(sesion));
         fila.append(celdaTipo, crearCeldaEstado(sesion), crearCeldaAccion(sesion));
+        Array.from(fila.children).forEach(function (celda, indice) {
+            celda.dataset.etiqueta = ["Fecha", "Tipo de sesión", "Estado", "Acción"][indice];
+        });
         cuerpo.append(fila);
     });
 }

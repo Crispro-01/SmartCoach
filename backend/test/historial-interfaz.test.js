@@ -7,7 +7,7 @@ function prepararInterfaz(respuesta) {
     // DOM mínimo para comprobar enlaces y mensajes sin depender de un navegador real.
     function elemento() {
         return {
-            children: [], textContent: "", hidden: false,
+            children: [], dataset: {}, textContent: "", hidden: false,
             append(...hijos) { this.children.push(...hijos); },
             replaceChildren() { this.children = []; }
         };
@@ -33,6 +33,8 @@ test("historial muestra Incompleta/Continuar y Completada/Ver en columnas distin
         contexto.sesion = { id: "7", agenteId: "TM001", agenteNombre: "Laura <prueba>", fecha: "16/10/2026", tipo: "Coaching", estado };
         const fila = vm.runInContext("crearFilaHistorial(sesion)", contexto);
         assert.equal(fila.children.length, 6);
+        assert.deepEqual(Array.from(fila.children, celda => celda.dataset.etiqueta),
+            ["Fecha", "Agente", "ID empleado", "Tipo de sesión", "Estado", "Acción"]);
         assert.equal(fila.children[1].children[0].textContent, "Laura <prueba>");
         assert.equal(fila.children[4].children[0].textContent, etiqueta);
         assert.equal(fila.children[5].children[0].textContent, accion);

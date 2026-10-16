@@ -42,6 +42,11 @@ function crearFilaAgente(agente) {
     celdaAccion.append(enlace);
     fila.append(celdaTipo, celdaAccion);
 
+    // Las mismas celdas se presentan como tarjetas etiquetadas en celular.
+    Array.from(fila.children).forEach(function (celda, indice) {
+        celda.dataset.etiqueta = ["Agente", "ID empleado", "Última sesión", "Tipo de sesión", "Acción"][indice];
+    });
+
     return fila;
 }
 

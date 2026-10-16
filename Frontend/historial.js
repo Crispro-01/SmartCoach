@@ -38,6 +38,9 @@ function crearFilaHistorial(sesion) {
     }
     fila.append(crearCeldaHistorial(sesion.fecha), celdaAgente,
         crearCeldaHistorial(sesion.agenteId), celdaTipo, celdaEstado, celdaAccion);
+    Array.from(fila.children).forEach(function (celda, indice) {
+        celda.dataset.etiqueta = ["Fecha", "Agente", "ID empleado", "Tipo de sesión", "Estado", "Acción"][indice];
+    });
     return fila;
 }
 
