@@ -145,6 +145,28 @@ test("si falla un bloque del Coaching se revierte toda la transacción", async f
     assert.equal(prueba.estado.liberada, true);
 });
 
+test("una sesión incompleta se rechaza antes de insertar datos", async function () {
+    const original = pool.getConnection;
+    const prueba = conexionDePrueba();
+    pool.getConnection = async function () { return prueba.conexion; };
+    const solicitud = solicitudDePrueba();
+    solicitud.body.calls[0].evaluations.pop();
+    const respuesta = respuestaDePrueba();
+
+    try {
+        await crearSesionCoaching(solicitud, respuesta);
+    } finally {
+        pool.getConnection = original;
+    }
+
+    assert.equal(respuesta.codigo, 400);
+    assert.match(respuesta.cuerpo.mensaje, /Completa los comportamientos/);
+    assert.equal(prueba.consultas.some(({ sql }) => sql.startsWith("INSERT INTO ")), false);
+    assert.equal(prueba.estado.confirmada, false);
+    assert.equal(prueba.estado.revertida, true);
+    assert.equal(prueba.estado.liberada, true);
+});
+
 function conexionParaEditarBorrador(estadoBorrador) {
     const consultas = [];
     const estado = { iniciada: false, confirmada: false, revertida: false, liberada: false };
