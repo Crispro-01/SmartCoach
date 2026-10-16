@@ -17,8 +17,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const tipoSesion = parametros.get("tipo");
     const fechaHoraInicio = parametros.get("inicio");
     let borradorId = parametros.get("borrador");
-    const botonDescartarBorrador = document.getElementById("descartarBorradorCoaching");
-    botonDescartarBorrador.hidden = !borradorId;
+    const botonDescartarSesion = document.getElementById("descartarSesionCoaching");
     const agenteNombre = agentes[agenteId];
     const formularioCoaching = document.getElementById("formularioCoaching");
 
@@ -49,7 +48,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.getElementById("agenteIdCoaching").value = agenteId;
     document.getElementById("fechaHoraInicioCoaching").value = fechaHoraInicio || "";
     document.getElementById("volverAgente").href = `detalle-agente.html?id=${agenteId}`;
-    document.getElementById("cancelarFormularioCoaching").href = `nueva-sesion.html?agente=${agenteId}`;
 
     const cronometroCoaching = document.getElementById("cronometroCoaching");
     const tiempoCoaching = document.getElementById("tiempoCoaching");
@@ -395,7 +393,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             if (!borradorId) {
                 const claveAnterior = claveInicioCronometro;
                 borradorId = resultado.datos.sesionId;
-                botonDescartarBorrador.hidden = false;
+                botonDescartarSesion.hidden = false;
                 claveInicioCronometro = `smartCoach:inicioCoaching:${agenteId}:${borradorId}`;
                 const inicioAnterior = window.localStorage.getItem(claveAnterior);
                 if (inicioAnterior) window.localStorage.setItem(claveInicioCronometro, inicioAnterior);
@@ -412,29 +410,33 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     });
 
-    botonDescartarBorrador.addEventListener("click", async function () {
-        if (!borradorId || !window.confirm("¿Descartar esta sesión incompleta? Se eliminará el borrador.")) {
+    botonDescartarSesion.addEventListener("click", async function () {
+        const confirmacion = borradorId
+            ? "¿Descartar esta sesión incompleta? Se eliminará el borrador guardado."
+            : "¿Descartar esta sesión sin guardar y volver al historial? Se perderán los datos ingresados.";
+        if (!window.confirm(confirmacion)) {
             return;
         }
 
-        botonDescartarBorrador.disabled = true;
-        const borradorDescartado = borradorId;
+        botonDescartarSesion.disabled = true;
         try {
-            const respuesta = await fetch(`/api/sesiones/coaching/borradores/${encodeURIComponent(borradorId)}`, {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ agentId: agenteId })
-            });
-            const resultado = respuesta.status === 204 ? { estado: "ok" } : await respuesta.json();
-            if (!respuesta.ok || resultado.estado !== "ok") {
-                throw new Error(resultado.mensaje || "No se pudo descartar la sesión incompleta.");
+            if (borradorId) {
+                const respuesta = await fetch(`/api/sesiones/coaching/borradores/${encodeURIComponent(borradorId)}`, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ agentId: agenteId })
+                });
+                const resultado = respuesta.status === 204 ? { estado: "ok" } : await respuesta.json();
+                if (!respuesta.ok || resultado.estado !== "ok") {
+                    throw new Error(resultado.mensaje || "No se pudo descartar la sesión incompleta.");
+                }
             }
-            window.localStorage.removeItem(`smartCoach:inicioCoaching:${agenteId}:${borradorDescartado}`);
+            window.localStorage.removeItem(claveInicioCronometro);
             window.location.href = `detalle-agente.html?id=${encodeURIComponent(agenteId)}`;
         } catch (error) {
-            console.error("No se pudo descartar la sesión incompleta:", error);
-            window.alert(error.message || "No se pudo descartar la sesión incompleta.");
-            botonDescartarBorrador.disabled = false;
+            console.error("No se pudo descartar la sesión:", error);
+            window.alert(error.message || "No se pudo descartar la sesión.");
+            botonDescartarSesion.disabled = false;
         }
     });
 

@@ -1375,13 +1375,12 @@ body {
 
 .boton-borrador {
     cursor: pointer;
-    border-color: #EAB308;
-    background-color: #FACC15;
-    color: #713F12;
+    background-color: white;
+    color: #166534;
 }
 
 .boton-borrador:hover {
-    background-color: #EAB308;
+    background-color: #F8FAFC;
 }
 
 .boton-descartar {
