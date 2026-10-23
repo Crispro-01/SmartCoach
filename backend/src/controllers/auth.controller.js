@@ -1,5 +1,5 @@
 import { pool } from "../config/database.js";
-import { crearHashContrasena, verificarContrasena } from "../auth/password.js";
+import { crearHashContrasena, validarContrasena, verificarContrasena } from "../auth/password.js";
 import { crearSesion, cerrarSesion } from "../auth/sessions.js";
 import { leerTokenSesion, NOMBRE_COOKIE } from "../auth/auth.middleware.js";
 
@@ -16,6 +16,47 @@ const HASH_FALSO = await crearHashContrasena("clave ficticia solo para igualar t
 
 function datosPublicos(usuario) {
     return { employeeId: usuario.employeeId, nombre: usuario.nombre, correo: usuario.correo, rol: usuario.rol };
+}
+
+// El registro no es público: un Manager da de alta a los Coaches de su equipo.
+// La contraseña se transforma en un hash antes de escribirla en MySQL.
+export async function registrarCoach(solicitud, respuesta) {
+    const employeeId = typeof solicitud.body?.employeeId === "string" ? solicitud.body.employeeId.trim().toUpperCase() : "";
+    const nombre = typeof solicitud.body?.nombre === "string" ? solicitud.body.nombre.trim() : "";
+    const correo = typeof solicitud.body?.correo === "string" ? solicitud.body.correo.trim().toLowerCase() : "";
+    const contrasena = solicitud.body?.contrasena;
+    if (!/^[A-Z0-9_-]{3,32}$/.test(employeeId) || nombre.length < 2 || nombre.length > 150 ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo) || correo.length > 254) {
+        return respuesta.status(400).json({ estado: "error", mensaje: "Revisa el ID, el nombre y el correo del Coach." });
+    }
+    try {
+        validarContrasena(contrasena);
+    } catch {
+        return respuesta.status(400).json({ estado: "error", mensaje: "La contraseña debe tener entre 12 y 128 caracteres." });
+    }
+
+    try {
+        const passwordHash = await crearHashContrasena(contrasena);
+        const [resultado] = await pool.execute(
+            "INSERT INTO usuarios (employee_id, nombre, correo, password_hash, rol_id, supervisor_id) " +
+            "SELECT ?, ?, ?, ?, rol_id, ? FROM roles WHERE nombre = 'Coach'",
+            [employeeId, nombre, correo, passwordHash, solicitud.usuario.employeeId]
+        );
+        if (resultado.affectedRows !== 1) {
+            return respuesta.status(500).json({ estado: "error", mensaje: "No se encontró el rol Coach." });
+        }
+        return respuesta.status(201).json({
+            estado: "ok",
+            mensaje: "Coach registrado correctamente.",
+            datos: { employeeId, nombre, correo, rol: "Coach" }
+        });
+    } catch (error) {
+        if (error.code === "ER_DUP_ENTRY") {
+            return respuesta.status(409).json({ estado: "error", mensaje: "El ID o el correo ya está registrado." });
+        }
+        console.error("No se pudo registrar el Coach:", error.message);
+        return respuesta.status(500).json({ estado: "error", mensaje: "No se pudo registrar el Coach." });
+    }
 }
 
 export async function iniciarSesion(solicitud, respuesta) {

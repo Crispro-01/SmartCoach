@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Coach - Registrar Coach</title>
+    <link rel="stylesheet" href="estilos.css">
+    <script src="dialogos.js" defer></script>
+    <script src="menu.js" defer></script>
+    <script src="registrar-coach.js" defer></script>
+</head>
+<body>
+    <main class="dashboard" data-roles-permitidos="Manager">
+        <aside class="menu-lateral">
+            <div class="cabecera-menu">
+                <h1>Smart Coach</h1>
+                <button type="button" class="boton-menu" aria-label="Contraer menú" aria-expanded="true">☰</button>
+            </div>
+            <nav class="navegacion-menu" aria-label="Navegación principal">
+                <a href="revision-solicitudes.html">Solicitudes</a>
+                <a href="registrar-coach.html" class="activo" aria-current="page">Registrar Coach</a>
+                <a href="index.html">Cerrar sesión</a>
+            </nav>
+        </aside>
+        <section class="contenido-dashboard">
+            <header class="cabecera-dashboard">
+                <div>
+                    <h2>Registrar Coach</h2>
+                    <p>Crea una cuenta para un Coach de tu equipo. El acceso no está abierto al público.</p>
+                </div>
+                <div class="usuario-dashboard"><span>Manager</span></div>
+            </header>
+            <section class="tarjeta-sesion" aria-labelledby="tituloRegistro">
+                <h3 id="tituloRegistro">Datos de la cuenta</h3>
+                <form id="formularioRegistro">
+                    <div class="fila-formulario">
+                        <div class="campo">
+                            <label for="employeeId">ID de empleado</label>
+                            <input id="employeeId" name="employeeId" autocomplete="off" minlength="3" maxlength="32" pattern="[A-Za-z0-9_-]+" required>
+                        </div>
+                        <div class="campo">
+                            <label for="nombre">Nombre completo</label>
+                            <input id="nombre" name="nombre" autocomplete="name" minlength="2" maxlength="150" required>
+                        </div>
+                    </div>
+                    <div class="fila-formulario">
+                        <div class="campo">
+                            <label for="correo">Correo electrónico</label>
+                            <input id="correo" name="correo" type="email" autocomplete="off" maxlength="254" required>
+                        </div>
+                        <div class="campo">
+                            <label for="contrasena">Contraseña inicial</label>
+                            <input id="contrasena" name="contrasena" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                            <small>Entre 12 y 128 caracteres. No se mostrará ni se guardará en texto plano.</small>
+                        </div>
+                    </div>
+                    <div class="acciones-formulario"><button id="botonRegistrar" class="boton-principal" type="submit">Registrar Coach</button></div>
+                    <p id="mensajeRegistro" role="status" aria-live="polite"></p>
+                </form>
+            </section>
+        </section>
+    </main>
+</body>
+</html>

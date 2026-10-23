@@ -4,6 +4,7 @@ Esta guía describe las rutas conectadas en `backend/src/app.js`. En desarrollo 
 
 ## Acceso y roles
 
+- `POST /api/auth/registro`: un Manager registra un Coach de su equipo con ID de empleado, nombre, correo y contraseña inicial. No existe registro público. MySQL recibe solo un hash de la contraseña.
 - `POST /api/auth/login`: inicia sesión con correo y contraseña. La respuesta incluye una cookie de sesión `HttpOnly` y `SameSite=Strict`.
 - `GET /api/auth/me`: devuelve los datos públicos de la sesión actual; requiere usuario autenticado.
 - `POST /api/auth/logout`: cierra la sesión actual y limpia la cookie.
@@ -18,6 +19,7 @@ La autorización vuelve a consultar en MySQL que la cuenta siga activa y conserv
 | Método | Ruta | Rol | Uso y efecto |
 |---|---|---|---|
 | `GET` | `/api/estado` | Público | Comprueba que la API responde; solo lectura. |
+| `POST` | `/api/auth/registro` | Manager | Registra un Coach de su equipo; devuelve 201, 400 por datos inválidos o 409 por ID/correo duplicado. |
 | `POST` | `/api/auth/login` | Público | Valida credenciales y crea una sesión. |
 | `GET` | `/api/auth/me` | Usuario autenticado | Consulta los datos públicos de la sesión actual. |
 | `POST` | `/api/auth/logout` | Sesión actual | Invalida la sesión y limpia la cookie. |
@@ -34,6 +36,12 @@ La autorización vuelve a consultar en MySQL que la cuenta siga activa y conserv
 | `GET` | `/api/revision/solicitudes` | Manager | Lista solicitudes de los Coaches que pertenecen a su equipo. |
 | `PUT` | `/api/revision/solicitudes/:id` | Manager | Aprueba o rechaza una solicitud pendiente con justificación. |
 | `GET` | `/api/revision/sesiones/coaching/:id?agenteId=...` | Manager | Consulta el detalle de una sesión de su equipo, incluso si fue archivada. |
+
+### Registro e inicio de sesión
+
+El Manager usa `Frontend/registrar-coach.html` para enviar `POST /api/auth/registro` con `employeeId`, `nombre`, `correo` y `contrasena`. El servidor fija el rol **Coach** y asigna al Manager autenticado como supervisor: el navegador no puede elegir ni elevar el rol. El correo y el ID deben ser únicos. La respuesta nunca incluye la contraseña ni su hash.
+
+El Coach registrado inicia sesión en `Frontend/index.html` mediante `POST /api/auth/login` con `correo` y `contrasena`. Una respuesta correcta es `200` con `estado: "ok"` y una cookie de sesión; credenciales incorrectas dan `401` con un mensaje genérico. Se limitan los intentos repetidos desde una misma IP. Las peticiones de escritura hechas fuera del navegador deben incluir el encabezado `Origin` correspondiente al servidor local configurado.
 
 Los borradores pueden editarse. Las sesiones completadas no tienen una ruta de edición: para retirarlas del historial normal se solicita una revisión. Si el Manager aprueba, la sesión queda archivada para el Coach, pero sus datos se conservan en MySQL. No existe una eliminación física directa desde la interfaz.
 
