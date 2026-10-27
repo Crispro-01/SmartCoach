@@ -300,9 +300,26 @@ body {
 .pagina-inicio #reintentarResumen { margin-bottom: 16px; }
 .pagina-inicio #reintentarResumen[hidden] { display: none; }
 
+.pagina-seguimiento .contenido-dashboard { min-width: 0; }
+.pagina-seguimiento .seguimiento-totales {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.pagina-seguimiento #mensajeSeguimiento { margin-bottom: 16px; color: #475569; }
+.pagina-seguimiento #reintentarSeguimiento { margin-bottom: 16px; }
+.pagina-seguimiento #reintentarSeguimiento[hidden] { display: none; }
+.tabla-seguimiento { min-width: 720px; }
+.tabla-seguimiento th,
+.tabla-seguimiento td { vertical-align: middle; }
+.tabla-seguimiento td:nth-child(3),
+.tabla-seguimiento td:nth-child(4),
+.tabla-seguimiento td:last-child { text-align: center; }
+.tabla-seguimiento td:last-child { width: 140px; }
+
 @media (max-width: 900px) {
     .pagina-inicio .resumen-dashboard { grid-template-columns: 1fr; }
     .pagina-inicio .acciones-contenedor { flex-direction: column; }
+    .pagina-seguimiento .seguimiento-totales { grid-template-columns: 1fr; }
 }
 
 .tarjeta-resumen {
@@ -1550,7 +1567,8 @@ body {
 
     /* En móvil no se ocultan columnas: cada fila conserva sus datos y su acción. */
     .tabla-movil,
-    .historial-general .tabla-agentes { display: block; min-width: 0; }
+    .historial-general .tabla-agentes,
+    .tabla-seguimiento { display: block; min-width: 0; }
     .tabla-movil thead {
         position: absolute;
         width: 1px;
