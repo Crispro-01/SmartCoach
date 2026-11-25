@@ -18,6 +18,7 @@ function preparar(archivo) {
             getElementById() { return historial; }
         }
     });
+    vm.runInContext(fs.readFileSync(new URL("../../Frontend/rutas-sesion.js", import.meta.url), "utf8"), contexto);
     vm.runInContext(fs.readFileSync(new URL(`../../Frontend/${archivo}`, import.meta.url), "utf8"), contexto);
     return { contexto, historial };
 }
@@ -32,7 +33,7 @@ test("las tarjetas móviles de agentes conservan sus cinco campos y el enlace", 
 
 test("el perfil móvil mantiene Estado y Acción separados para ambos estados", function () {
     const { contexto, historial } = preparar("detalle-agente.js");
-    for (const [clase, tipo] of [["coaching", "Coaching"], ["itgf", "ITGF"]]) {
+    for (const [clase, tipo] of [["coaching", "Coaching"], ["itgf", "ITGF"], ["accountability", "Accountability"], ["verbal-warning", "Verbal Warning"]]) {
       for (const [estado, accion] of [["Borrador", "Continuar"], ["Completada", "Ver"]]) {
         contexto.sesiones = [{ id: "7", agenteId: "TM001", fecha: "16/10/2026", clase, tipo, estado }];
         vm.runInContext("mostrarHistorial(sesiones)", contexto);
@@ -41,7 +42,8 @@ test("el perfil móvil mantiene Estado y Acción separados para ambos estados", 
             ["Fecha", "Tipo de sesión", "Estado", "Acción"]);
         assert.equal(celdas[2].children[0].textContent, estado === "Borrador" ? "Incompleta" : "Completada");
         assert.equal(celdas[3].children[0].textContent, accion);
-        assert.ok(celdas[3].children[0].href.startsWith(estado === "Borrador" ? `formulario-${clase}.html?` : `detalle-${clase}.html?`));
+        const archivo = ["accountability", "verbal-warning"].includes(clase) ? "correctivo" : clase;
+        assert.ok(celdas[3].children[0].href.startsWith(estado === "Borrador" ? `formulario-${archivo}.html?` : `detalle-${archivo}.html?`));
       }
     }
 });

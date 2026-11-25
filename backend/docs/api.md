@@ -26,7 +26,7 @@ La autorización vuelve a consultar en MySQL que la cuenta siga activa y conserv
 | `GET` | `/api/agentes` | Coach | Lista agentes activos del equipo y el resumen de sus sesiones. |
 | `GET` | `/api/agentes/:id` | Coach | Consulta un agente activo por su ID de empleado. |
 | `GET` | `/api/catalogos/coaching` | Coach | Devuelve comportamientos, Call Drivers agrupados, KPIs y tipos de seguimiento activos. |
-| `GET` | `/api/sesiones` | Coach | Lista sus sesiones de Coaching e ITGF de agentes activos de su equipo, de más reciente a más antigua. Incluye borradores y completadas, pero excluye las archivadas por aprobación. Solo lectura. |
+| `GET` | `/api/sesiones` | Coach | Lista sus sesiones de Coaching, ITGF, Accountability y Verbal Warning de agentes activos de su equipo, de más reciente a más antigua. Incluye borradores y completadas, pero excluye las archivadas por aprobación. Solo lectura. |
 | `POST` | `/api/sesiones/coaching` | Coach | Crea una sesión completa o convierte un borrador en sesión completada. Guarda sus bloques en una transacción MySQL. |
 | `POST` | `/api/sesiones/coaching/borradores` | Coach | Guarda un borrador editable. |
 | `GET` | `/api/sesiones/coaching/borradores/:id?agenteId=...` | Coach | Consulta un borrador propio. |
@@ -69,6 +69,25 @@ ITGF usa las tablas existentes `sesiones` y `sesiones_itgf`; no requiere migraci
 Las rutas `/api/sesiones/itgf*` exigen Coach. Completar requiere `agentId`, `contactId` (hasta 80 caracteres), `callDriverId`, `behaviorId`, `fulfilled` (booleano), `observations` (hasta 1500), `commitmentWhat`, `commitmentHow` y `commitmentWhen` (hasta 1000 cada uno). Un borrador admite campos vacíos y un máximo de 20 KB. Las escrituras se realizan dentro de una transacción; completar conserva el ID de la incompleta y limpia su JSON temporal. Una completada no se puede editar ni descartar como borrador (409).
 
 El formulario `formulario-itgf.html` permite Guardar, Descartar y Completar, y regresa al perfil actualizado del agente. `detalle-itgf.html` muestra la sesión completada y deja la solicitud de eliminación al final. El historial general y Seguimiento incluyen Coaching e ITGF. La revisión usa las mismas rutas de solicitudes del Manager y conserva los motivos y decisiones.
+
+## Accountability y Verbal Warning
+
+Estas sesiones comparten la tabla existente `sesiones_correctivas`, vinculada a `sesiones`. No requieren migración. `tipo` solo admite los segmentos `accountability` y `verbal-warning`; el backend fija el tipo desde la ruta y comprueba que coincida con la sesión consultada. No se puede transformar una Accountability en Verbal Warning cambiando el cuerpo ni la URL.
+
+| Método | Ruta | Uso |
+|---|---|---|
+| `POST` | `/api/sesiones/correctivas/:tipo/borradores` | Guarda campos parciales con `agentId`. |
+| `GET` | `/api/sesiones/correctivas/:tipo/borradores/:id?agenteId=...` | Recupera una incompleta del equipo y tipo indicados. |
+| `PUT` | `/api/sesiones/correctivas/:tipo/borradores/:id` | Actualiza una incompleta propia; requiere `agentId`. |
+| `DELETE` | `/api/sesiones/correctivas/:tipo/borradores/:id` | Descarta únicamente la incompleta propia; requiere `agentId`. |
+| `POST` | `/api/sesiones/correctivas/:tipo` | Completa una nueva sesión o la incompleta indicada por `draftId`. |
+| `GET` | `/api/sesiones/correctivas/:tipo/:id?agenteId=...` | Consulta una completada visible para el Coach. |
+| `POST` | `/api/sesiones/correctivas/:tipo/:id/solicitudes-eliminacion` | Solicita revisión con un motivo de 20 a 1000 caracteres. |
+| `GET` | `/api/revision/sesiones/correctivas/:tipo/:id?agenteId=...` | El Manager consulta el detalle de su equipo, incluidas las archivadas. |
+
+Completar requiere `agentId`, `cause` (situación o dificultad), `agentCommitment` y `coachCommitment`. Cada texto admite hasta 1500 caracteres y debe contener algo más que espacios. Guardar una incompleta admite campos vacíos y hasta 20 KB de JSON. Las escrituras usan transacciones y bloquean la incompleta para evitar completar y descartar simultáneamente. Una completada rechaza la edición o el descarte como borrador (409).
+
+`Frontend/formulario-correctivo.html` obtiene el nombre del agente desde la API y conserva el tipo seleccionado. Guardar, Descartar y Completar regresan al perfil actualizado. `detalle-correctivo.html` muestra la situación y los compromisos, con la solicitud de eliminación al final. El historial, el resumen y Seguimiento incluyen los cuatro tipos; `rutas-sesion.js` mantiene sus enlaces de consulta y continuación, también desde la revisión del Manager.
 
 ## Solicitudes de eliminación
 

@@ -81,9 +81,13 @@
                         <textarea id="compromisoCoach" name="compromisoCoach" rows="5" maxlength="1500" placeholder="Registra el acompañamiento y seguimiento del Coach" required></textarea>
                     </div>
 
-                    <div class="acciones-formulario">
-                        <a id="cancelarFormularioCorrectivo" href="agentes.html" class="boton-secundario">Cancelar</a>
-                        <button type="submit" id="guardarSesionCorrectiva" class="boton-principal">Guardar sesión</button>
+                    <p id="estadoCorrectiva" role="status">Cargando formulario…</p>
+                    <div class="acciones-formulario acciones-coaching">
+                        <button type="button" id="descartarCorrectiva" class="boton-secundario boton-descartar" disabled>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>Descartar
+                        </button>
+                        <button type="button" id="guardarCorrectiva" class="boton-secundario boton-borrador" disabled>Guardar</button>
+                        <button type="submit" id="completarCorrectiva" class="boton-principal" disabled>Completar</button>
                     </div>
                 </form>
             </section>

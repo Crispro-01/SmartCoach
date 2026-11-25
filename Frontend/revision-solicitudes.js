@@ -26,9 +26,11 @@ function mostrarSolicitud(solicitud, destino) {
         agregarCampo(campos, "Justificación de la decisión", solicitud.respuestaRevision);
     }
     const enlace = document.createElement("a");
-    enlace.href = `${solicitud.clase === "itgf" ? "detalle-itgf.html" : "detalle-coaching.html"}?agente=${encodeURIComponent(solicitud.agenteId)}&sesion=${encodeURIComponent(solicitud.sesionId)}&revision=1`;
+    const rutas = rutasDeSesion(solicitud);
+    if (rutas) enlace.href = `${rutas.detalle}&revision=1`;
     enlace.textContent = "Ver sesión completa";
-    tarjeta.append(titulo, campos, enlace);
+    tarjeta.append(titulo, campos);
+    if (rutas) tarjeta.append(enlace);
 
     if (solicitud.estado === "PENDIENTE") {
         const formulario = document.createElement("form");

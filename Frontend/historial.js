@@ -14,12 +14,13 @@ function crearFilaHistorial(sesion) {
     const celdaTipo = document.createElement("td");
     const tipo = document.createElement("span");
     tipo.className = "tipo-sesion";
-    if (["coaching", "itgf"].includes(sesion.clase)) tipo.classList.add(sesion.clase);
+    if (["coaching", "itgf", "accountability", "verbal-warning"].includes(sesion.clase)) tipo.classList.add(sesion.clase);
     tipo.textContent = sesion.tipo;
     celdaTipo.append(tipo);
 
     const celdaEstado = document.createElement("td");
     const celdaAccion = document.createElement("td");
+    const rutas = rutasDeSesion(sesion);
     const incompleta = sesion.estado === "Borrador";
     if (incompleta || sesion.estado === "Completada") {
         const estado = document.createElement("span");
@@ -28,12 +29,10 @@ function crearFilaHistorial(sesion) {
         celdaEstado.append(estado);
         const accion = document.createElement("a");
         // Se usan los mismos formularios y permisos que en el historial individual.
-        accion.href = incompleta
-            ? `${sesion.clase === "itgf" ? "formulario-itgf.html" : "formulario-coaching.html"}?agente=${encodeURIComponent(sesion.agenteId)}&tipo=${sesion.clase === "itgf" ? "ITGF" : "Coaching"}&borrador=${encodeURIComponent(sesion.id)}`
-            : `${sesion.clase === "itgf" ? "detalle-itgf.html" : "detalle-coaching.html"}?agente=${encodeURIComponent(sesion.agenteId)}&sesion=${encodeURIComponent(sesion.id)}`;
+        accion.href = incompleta ? rutas?.continuar : rutas?.detalle;
         accion.className = "boton-principal enlace-boton accion-sesion";
         accion.textContent = incompleta ? "Continuar" : "Ver";
-        celdaAccion.append(accion);
+        if (rutas) celdaAccion.append(accion);
     } else {
         celdaEstado.textContent = sesion.estado || "—";
     }

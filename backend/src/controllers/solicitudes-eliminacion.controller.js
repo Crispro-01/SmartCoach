@@ -2,7 +2,7 @@ import { pool } from "../config/database.js";
 
 // Una solicitud deja constancia del motivo. Esta ruta no borra ninguna sesión.
 export async function solicitarEliminacionCoaching(solicitud, respuesta, tipo = "COACHING") {
-    if (!["COACHING", "ITGF"].includes(tipo)) return respuesta.status(400).json({ estado: "error", mensaje: "Tipo de sesión inválido." });
+    if (!["COACHING", "ITGF", "ACCOUNTABILITY", "VERBAL_WARNING"].includes(tipo)) return respuesta.status(400).json({ estado: "error", mensaje: "Tipo de sesión inválido." });
     const id = Number(solicitud.params.id);
     const motivo = typeof solicitud.body?.motivo === "string" ? solicitud.body.motivo.trim() : "";
     if (!Number.isSafeInteger(id) || id < 1 || motivo.length < 20 || motivo.length > 1000) {

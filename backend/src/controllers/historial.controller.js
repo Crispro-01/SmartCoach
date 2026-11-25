@@ -20,7 +20,8 @@ export async function listarHistorial(solicitud, respuesta) {
             INNER JOIN estados_sesion AS estado ON estado.estado_sesion_id = sesion.estado_sesion_id
             WHERE sesion.coach_id = ? AND agente.supervisor_id = ?
                 AND agente.activo = TRUE AND rol.nombre = 'Agente'
-                AND tipo.codigo IN ('COACHING', 'ITGF') AND estado.codigo IN ('BORRADOR', 'COMPLETADA')
+                AND tipo.codigo IN ('COACHING', 'ITGF', 'ACCOUNTABILITY', 'VERBAL_WARNING')
+                AND estado.codigo IN ('BORRADOR', 'COMPLETADA')
                 AND NOT EXISTS (
                     SELECT 1 FROM solicitudes_eliminacion_sesion AS archivo
                     WHERE archivo.sesion_id = sesion.sesion_id AND archivo.estado = 'APROBADA'

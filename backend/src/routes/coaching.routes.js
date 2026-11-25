@@ -9,11 +9,13 @@ import {
 import { consultarSesionCoaching } from "../controllers/consulta-coaching.controller.js";
 import { solicitarEliminacionCoaching } from "../controllers/solicitudes-eliminacion.controller.js";
 import { listarHistorial } from "../controllers/historial.controller.js";
+import rutasCorrectivas from "./correctivas.routes.js";
 
 import { crearBorradorItgf, obtenerBorradorItgf, actualizarBorradorItgf,
     descartarBorradorItgf, completarItgf, consultarItgf } from "../controllers/itgf.controller.js";
 
 const rutasCoaching = Router();
+rutasCoaching.use("/correctivas", rutasCorrectivas);
 rutasCoaching.post("/itgf", completarItgf);
 rutasCoaching.post("/itgf/borradores", crearBorradorItgf);
 rutasCoaching.get("/itgf/borradores/:id", obtenerBorradorItgf);

@@ -20,6 +20,7 @@ function prepararInterfaz(respuesta) {
         fetch: async function () { if (respuesta instanceof Error) throw respuesta; return respuesta; },
         console: { error() {} }
     });
+    vm.runInContext(fs.readFileSync(new URL("../../Frontend/rutas-sesion.js", import.meta.url), "utf8"), contexto);
     vm.runInContext(fs.readFileSync(new URL("../../Frontend/historial.js", import.meta.url), "utf8"), contexto);
     return { contexto, nodos };
 }
@@ -80,5 +81,20 @@ test("historial ITGF abre su formulario o detalle y mantiene estado y acción se
         assert.equal(fila.children[3].children[0].textContent, "ITGF");
         assert.equal(fila.children[4].children.length, 1);
         assert.equal(fila.children[5].children[0].href, ruta);
+    }
+});
+
+test("historial correctivo conserva tipo y acción en sus propias columnas", function () {
+    const { contexto } = prepararInterfaz();
+    for (const [clase, tipo] of [["accountability", "Accountability"], ["verbal-warning", "Verbal Warning"]]) {
+        for (const estado of ["Borrador", "Completada"]) {
+            contexto.sesion = { id: "91", agenteId: "TM009", tipo, clase, estado };
+            const fila = vm.runInContext("crearFilaHistorial(sesion)", contexto);
+            const ruta = fila.children[5].children[0].href;
+            assert.equal(fila.children[3].children[0].textContent, tipo);
+            assert.equal(fila.children[4].children[0].textContent, estado === "Borrador" ? "Incompleta" : "Completada");
+            assert.ok(ruta.includes(`tipo=${encodeURIComponent(tipo)}`));
+            assert.ok(ruta.startsWith(estado === "Borrador" ? "formulario-correctivo.html?" : "detalle-correctivo.html?"));
+        }
     }
 });
