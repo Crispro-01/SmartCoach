@@ -32,14 +32,17 @@ test("las tarjetas móviles de agentes conservan sus cinco campos y el enlace", 
 
 test("el perfil móvil mantiene Estado y Acción separados para ambos estados", function () {
     const { contexto, historial } = preparar("detalle-agente.js");
-    for (const [estado, accion] of [["Borrador", "Continuar"], ["Completada", "Ver"]]) {
-        contexto.sesiones = [{ id: "7", agenteId: "TM001", fecha: "16/10/2026", clase: "coaching", tipo: "Coaching", estado }];
+    for (const [clase, tipo] of [["coaching", "Coaching"], ["itgf", "ITGF"]]) {
+      for (const [estado, accion] of [["Borrador", "Continuar"], ["Completada", "Ver"]]) {
+        contexto.sesiones = [{ id: "7", agenteId: "TM001", fecha: "16/10/2026", clase, tipo, estado }];
         vm.runInContext("mostrarHistorial(sesiones)", contexto);
         const celdas = historial.children[0].children;
         assert.deepEqual(Array.from(celdas, celda => celda.dataset.etiqueta),
             ["Fecha", "Tipo de sesión", "Estado", "Acción"]);
         assert.equal(celdas[2].children[0].textContent, estado === "Borrador" ? "Incompleta" : "Completada");
         assert.equal(celdas[3].children[0].textContent, accion);
+        assert.ok(celdas[3].children[0].href.startsWith(estado === "Borrador" ? `formulario-${clase}.html?` : `detalle-${clase}.html?`));
+      }
     }
 });
 

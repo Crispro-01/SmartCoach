@@ -13,7 +13,8 @@ function crearFilaHistorial(sesion) {
     celdaAgente.append(agente);
     const celdaTipo = document.createElement("td");
     const tipo = document.createElement("span");
-    tipo.className = "tipo-sesion coaching";
+    tipo.className = "tipo-sesion";
+    if (["coaching", "itgf"].includes(sesion.clase)) tipo.classList.add(sesion.clase);
     tipo.textContent = sesion.tipo;
     celdaTipo.append(tipo);
 
@@ -28,8 +29,8 @@ function crearFilaHistorial(sesion) {
         const accion = document.createElement("a");
         // Se usan los mismos formularios y permisos que en el historial individual.
         accion.href = incompleta
-            ? `formulario-coaching.html?agente=${encodeURIComponent(sesion.agenteId)}&tipo=Coaching&borrador=${encodeURIComponent(sesion.id)}`
-            : `detalle-coaching.html?agente=${encodeURIComponent(sesion.agenteId)}&sesion=${encodeURIComponent(sesion.id)}`;
+            ? `${sesion.clase === "itgf" ? "formulario-itgf.html" : "formulario-coaching.html"}?agente=${encodeURIComponent(sesion.agenteId)}&tipo=${sesion.clase === "itgf" ? "ITGF" : "Coaching"}&borrador=${encodeURIComponent(sesion.id)}`
+            : `${sesion.clase === "itgf" ? "detalle-itgf.html" : "detalle-coaching.html"}?agente=${encodeURIComponent(sesion.agenteId)}&sesion=${encodeURIComponent(sesion.id)}`;
         accion.className = "boton-principal enlace-boton accion-sesion";
         accion.textContent = incompleta ? "Continuar" : "Ver";
         celdaAccion.append(accion);
@@ -66,8 +67,8 @@ async function cargarHistorialGeneral() {
         if (!Array.isArray(resultado.datos)) throw new Error("Respuesta de historial inválida.");
         resultado.datos.forEach(function (sesion) { cuerpo.append(crearFilaHistorial(sesion)); });
         mensaje.textContent = resultado.datos.length === 0
-            ? "Todavía no tienes sesiones de Coaching registradas para tus agentes."
-            : resultado.datos.length === 1 ? "1 sesión de Coaching." : `${resultado.datos.length} sesiones de Coaching.`;
+            ? "Todavía no tienes sesiones registradas para tus agentes."
+            : resultado.datos.length === 1 ? "1 sesión." : `${resultado.datos.length} sesiones.`;
     } catch (error) {
         cuerpo.replaceChildren();
         mensaje.textContent = "No se pudo cargar el historial. Revisa la conexión e intenta de nuevo.";

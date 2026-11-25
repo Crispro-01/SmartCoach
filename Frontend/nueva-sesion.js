@@ -1,14 +1,13 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const agentes = {
-        TM001: "Laura Gómez",
-        TM002: "Juan Pérez",
-        TM003: "Daniela Ruiz",
-        TM004: "Andrés Torres",
-        TM005: "Camila Rodríguez"
-    };
+document.addEventListener("DOMContentLoaded", async function () {
     const parametros = new URLSearchParams(window.location.search);
     const agenteId = parametros.get("agente");
-    const agenteNombre = agentes[agenteId];
+    let agenteNombre;
+    try {
+        const respuesta = await fetch(`/api/agentes/${encodeURIComponent(agenteId || "")}`);
+        if (respuesta.status === 401) { window.location.href = "index.html"; return; }
+        if (!respuesta.ok) throw new Error("No se pudo consultar el agente.");
+        agenteNombre = (await respuesta.json()).datos.nombre;
+    } catch { window.location.href = "agentes.html"; return; }
     const campoFechaHoraInicio = document.getElementById("fechaHoraInicio");
     const formularioSesion = document.getElementById("formularioSesion");
 

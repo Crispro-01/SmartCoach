@@ -26,7 +26,7 @@ La autorización vuelve a consultar en MySQL que la cuenta siga activa y conserv
 | `GET` | `/api/agentes` | Coach | Lista agentes activos del equipo y el resumen de sus sesiones. |
 | `GET` | `/api/agentes/:id` | Coach | Consulta un agente activo por su ID de empleado. |
 | `GET` | `/api/catalogos/coaching` | Coach | Devuelve comportamientos, Call Drivers agrupados, KPIs y tipos de seguimiento activos. |
-| `GET` | `/api/sesiones` | Coach | Lista sus sesiones de Coaching de agentes activos de su equipo, de más reciente a más antigua. Incluye borradores y completadas, pero excluye las archivadas por aprobación. Solo lectura. |
+| `GET` | `/api/sesiones` | Coach | Lista sus sesiones de Coaching e ITGF de agentes activos de su equipo, de más reciente a más antigua. Incluye borradores y completadas, pero excluye las archivadas por aprobación. Solo lectura. |
 | `POST` | `/api/sesiones/coaching` | Coach | Crea una sesión completa o convierte un borrador en sesión completada. Guarda sus bloques en una transacción MySQL. |
 | `POST` | `/api/sesiones/coaching/borradores` | Coach | Guarda un borrador editable. |
 | `GET` | `/api/sesiones/coaching/borradores/:id?agenteId=...` | Coach | Consulta un borrador propio. |
@@ -50,6 +50,25 @@ Los borradores pueden editarse. Las sesiones completadas no tienen una ruta de e
 El formulario real construye el objeto en `Frontend/formulario-coaching.js` (`construirPayloadCoaching`). Los IDs se cargan desde `/api/catalogos/coaching`; la API vuelve a validarlos en el servidor, sin confiar solamente en las validaciones del navegador. Para guardar una sesión se requieren exactamente dos llamadas y la evaluación de todos los comportamientos activos en ambas llamadas. Una apertura debe usar el tipo de seguimiento **Constructivo** y el número de sesión 1.
 
 Al guardar, el backend persiste la sesión, el detalle, las llamadas, sus evaluaciones, los resultados de comportamiento, el KPI, los compromisos y el análisis RCA dentro de una transacción. Si una validación o escritura falla, revierte la transacción para evitar registros parciales. Al completar un borrador se conserva el mismo ID y su contenido temporal se limpia como parte de la misma transacción.
+
+## ITGF
+
+ITGF usa las tablas existentes `sesiones` y `sesiones_itgf`; no requiere migración. Comparte los catálogos activos de Call Drivers y comportamientos y obtiene el agente desde la API, sin listas fijas de nombres.
+
+| Método | Ruta | Uso |
+|---|---|---|
+| `POST` | `/api/sesiones/itgf/borradores` | Guarda contenido parcial con `agentId`. |
+| `GET` | `/api/sesiones/itgf/borradores/:id?agenteId=...` | Recupera una incompleta del Coach y su equipo activo. |
+| `PUT` | `/api/sesiones/itgf/borradores/:id` | Actualiza una incompleta con `agentId` y sus campos. |
+| `DELETE` | `/api/sesiones/itgf/borradores/:id` | Descarta únicamente la incompleta identificada; requiere `agentId`. |
+| `POST` | `/api/sesiones/itgf` | Completa una sesión nueva o la incompleta indicada mediante `draftId`. |
+| `GET` | `/api/sesiones/itgf/:id?agenteId=...` | Consulta el detalle completado y visible para el Coach. |
+| `POST` | `/api/sesiones/itgf/:id/solicitudes-eliminacion` | Solicita revisión con `motivo` de 20 a 1000 caracteres. |
+| `GET` | `/api/revision/sesiones/itgf/:id?agenteId=...` | El Manager consulta el detalle de su equipo, incluidas las archivadas. |
+
+Las rutas `/api/sesiones/itgf*` exigen Coach. Completar requiere `agentId`, `contactId` (hasta 80 caracteres), `callDriverId`, `behaviorId`, `fulfilled` (booleano), `observations` (hasta 1500), `commitmentWhat`, `commitmentHow` y `commitmentWhen` (hasta 1000 cada uno). Un borrador admite campos vacíos y un máximo de 20 KB. Las escrituras se realizan dentro de una transacción; completar conserva el ID de la incompleta y limpia su JSON temporal. Una completada no se puede editar ni descartar como borrador (409).
+
+El formulario `formulario-itgf.html` permite Guardar, Descartar y Completar, y regresa al perfil actualizado del agente. `detalle-itgf.html` muestra la sesión completada y deja la solicitud de eliminación al final. El historial general y Seguimiento incluyen Coaching e ITGF. La revisión usa las mismas rutas de solicitudes del Manager y conserva los motivos y decisiones.
 
 ## Solicitudes de eliminación
 

@@ -26,7 +26,7 @@ function mostrarSolicitud(solicitud, destino) {
         agregarCampo(campos, "Justificación de la decisión", solicitud.respuestaRevision);
     }
     const enlace = document.createElement("a");
-    enlace.href = `detalle-coaching.html?agente=${encodeURIComponent(solicitud.agenteId)}&sesion=${encodeURIComponent(solicitud.sesionId)}&revision=1`;
+    enlace.href = `${solicitud.clase === "itgf" ? "detalle-itgf.html" : "detalle-coaching.html"}?agente=${encodeURIComponent(solicitud.agenteId)}&sesion=${encodeURIComponent(solicitud.sesionId)}&revision=1`;
     enlace.textContent = "Ver sesión completa";
     tarjeta.append(titulo, campos, enlace);
 

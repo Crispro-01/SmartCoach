@@ -69,66 +69,13 @@
                             </div>
                             <div class="campo">
                                 <label for="callDriverItgf">Call Driver *</label>
-                                <select id="callDriverItgf" name="callDriver" required>
-                                    <option value="" selected disabled>Selecciona el Call Driver</option>
-                                    <optgroup label="Facturación y pagos">
-                                        <option value="Cobros no reconocidos / Factura alta">Cobros no reconocidos / Factura alta</option>
-                                        <option value="Acuerdos de pago">Acuerdos de pago (Payment arrangements)</option>
-                                        <option value="Pagos rechazados o no aplicados">Pagos rechazados o no aplicados</option>
-                                        <option value="Consulta de saldo / Estado de cuenta">Consulta de saldo / Estado de cuenta</option>
-                                        <option value="Ajustes de factura">Ajustes de factura</option>
-                                    </optgroup>
-                                    <optgroup label="Soporte técnico">
-                                        <option value="Sin servicio">Sin servicio (No service)</option>
-                                        <option value="Reseteo de credenciales">Reseteo de credenciales</option>
-                                        <option value="Troubleshooting / Configuración">Troubleshooting / Configuración</option>
-                                        <option value="Problemas de conectividad">Problemas de conectividad</option>
-                                        <option value="Problemas con el equipo">Problemas con el equipo</option>
-                                    </optgroup>
-                                    <optgroup label="Retención y gestión de cuenta">
-                                        <option value="Cancelación de servicio">Cancelación de servicio (Disconnect)</option>
-                                        <option value="Cambio de titularidad">Cambio de titularidad (Transfer of Responsibility)</option>
-                                        <option value="Cambio de domicilio">Cambio de domicilio (Move order)</option>
-                                        <option value="Suspensión temporal de servicio">Suspensión temporal de servicio</option>
-                                        <option value="Reactivación de cuenta">Reactivación de cuenta</option>
-                                    </optgroup>
-                                    <optgroup label="Ventas y mejoras">
-                                        <option value="Upgrade de equipo / plan">Upgrade de equipo / plan</option>
-                                        <option value="Agregar líneas">Agregar líneas (Add-a-line)</option>
-                                        <option value="Consulta de promociones">Consulta de promociones</option>
-                                        <option value="Contratación de servicios adicionales">Contratación de servicios adicionales</option>
-                                        <option value="Cambio de plan">Cambio de plan</option>
-                                    </optgroup>
-                                    <optgroup label="Logística e información">
-                                        <option value="WISMO">WISMO (Where Is My Order?)</option>
-                                        <option value="Garantías / Devoluciones">Garantías / Devoluciones (RMA)</option>
-                                        <option value="Consulta general de servicios">Consulta general de servicios</option>
-                                        <option value="Seguimiento de orden">Seguimiento de orden</option>
-                                        <option value="Información de cuenta">Información de cuenta</option>
-                                    </optgroup>
-                                </select>
+                                <select id="callDriverItgf" name="callDriver" required><option value="">Selecciona el Call Driver</option></select>
                             </div>
                         </div>
 
                         <div class="campo">
                             <label for="comportamientoTrabajado">Comportamiento trabajado *</label>
-                            <select id="comportamientoTrabajado" name="comportamientoTrabajado" required>
-                                <option value="" selected disabled>Selecciona el comportamiento</option>
-                                <option value="Buen saludo">Buen saludo</option>
-                                <option value="Verificación de la cuenta">Verificación de la cuenta</option>
-                                <option value="Parafrasear la necesidad">Parafrasear la necesidad del cliente</option>
-                                <option value="Asegurar ayuda">Asegurar ayuda</option>
-                                <option value="Verbalizar la auditoría visual">Verbalizar la auditoría visual</option>
-                                <option value="Preguntas de sondeo">Preguntas de sondeo relevantes</option>
-                                <option value="Uso de herramientas">Uso de herramientas</option>
-                                <option value="Resolución">Resolución</option>
-                                <option value="Documentación en la cuenta">Documentación en la cuenta</option>
-                                <option value="Promover autoayuda">Promover opciones de autoayuda</option>
-                                <option value="Recapitulación">Recapitulación</option>
-                                <option value="Ofrecer productos o servicios">Ofrecer productos o servicios adecuados</option>
-                                <option value="Problemas adyacentes">Preguntar por problemas adyacentes</option>
-                                <option value="Agradecer al cliente y cerrar la llamada">Agradecer al cliente y cerrar la llamada</option>
-                            </select>
+                            <select id="comportamientoTrabajado" name="comportamientoTrabajado" required><option value="">Selecciona el comportamiento</option></select>
                         </div>
 
                         <fieldset class="campo campo-opciones-itgf">
@@ -167,9 +114,13 @@
                         </div>
                     </section>
 
-                    <div class="acciones-formulario">
-                        <a id="cancelarFormularioItgf" href="agentes.html" class="boton-secundario">Cancelar</a>
-                        <button type="submit" id="guardarSesionItgf" class="boton-principal">Guardar sesión</button>
+                    <p id="estadoItgf" role="status">Cargando formulario…</p>
+                    <div class="acciones-formulario acciones-coaching">
+                        <button type="button" id="descartarItgf" class="boton-secundario boton-descartar" disabled>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>Descartar
+                        </button>
+                        <button type="button" id="guardarItgf" class="boton-secundario boton-borrador" disabled>Guardar</button>
+                        <button type="submit" id="completarItgf" class="boton-principal" disabled>Completar</button>
                     </div>
                 </form>
             </section>

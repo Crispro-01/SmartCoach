@@ -16,9 +16,10 @@ export async function listarSolicitudesRevision(solicitud, respuesta) {
             "DATE_FORMAT(q.fecha_resolucion, '%d/%m/%Y %H:%i') AS fechaResolucion, " +
             "q.respuesta_revision AS respuestaRevision, r.nombre AS revisorNombre, " +
             "s.agente_id AS agenteId, a.nombre AS agenteNombre, " +
-            "s.coach_id AS coachId, c.nombre AS coachNombre, s.tema " +
+            "s.coach_id AS coachId, c.nombre AS coachNombre, s.tema, LOWER(t.codigo) AS clase " +
             "FROM solicitudes_eliminacion_sesion q " +
             "JOIN sesiones s ON s.sesion_id = q.sesion_id " +
+            "JOIN tipos_sesion t ON t.tipo_sesion_id = s.tipo_sesion_id " +
             "JOIN usuarios a ON a.employee_id = s.agente_id " +
             "JOIN usuarios c ON c.employee_id = s.coach_id " +
             "LEFT JOIN usuarios r ON r.employee_id = q.revisado_por " +
@@ -66,7 +67,7 @@ export async function resolverSolicitudRevision(solicitud, respuesta) {
         );
         if (!filas.length) throw new ErrorRevision("No se encontró una solicitud de tu equipo.", 404);
         if (filas[0].estado !== "PENDIENTE") throw new ErrorRevision("Esta solicitud ya fue resuelta.", 409);
-        if (filas[0].estadoSesion !== "COMPLETADA" || filas[0].tipoSesion !== "COACHING") {
+        if (filas[0].estadoSesion !== "COMPLETADA" || !["COACHING", "ITGF"].includes(filas[0].tipoSesion)) {
             throw new ErrorRevision("La sesión ya no cumple las condiciones para esta revisión.", 409);
         }
 
@@ -81,8 +82,8 @@ export async function resolverSolicitudRevision(solicitud, respuesta) {
         return respuesta.json({
             estado: "ok",
             mensaje: decision === "APROBADA"
-                ? "Solicitud aprobada. El Coaching se archivó sin borrar su historial."
-                : "Solicitud rechazada. El Coaching sigue visible.",
+                ? "Solicitud aprobada. La sesión se archivó sin borrar su historial."
+                : "Solicitud rechazada. La sesión sigue visible.",
             datos: { solicitudId: String(id), estado: decision }
         });
     } catch (error) {

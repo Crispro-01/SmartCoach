@@ -7,7 +7,7 @@ function prepararInterfaz(respuesta) {
     // DOM mínimo para comprobar enlaces y mensajes sin depender de un navegador real.
     function elemento() {
         return {
-            children: [], dataset: {}, textContent: "", hidden: false,
+            children: [], dataset: {}, textContent: "", hidden: false, classList: { add() {} },
             append(...hijos) { this.children.push(...hijos); },
             replaceChildren() { this.children = []; }
         };
@@ -67,6 +67,18 @@ test("historial cargado presenta cada sesión y el contador singular", async fun
     });
     await vm.runInContext("cargarHistorialGeneral()", contexto);
     assert.equal(nodos.historialGeneral.children.length, 1);
-    assert.equal(nodos.mensajeHistorial.textContent, "1 sesión de Coaching.");
+    assert.equal(nodos.mensajeHistorial.textContent, "1 sesión.");
     assert.equal(nodos.reintentarHistorial.hidden, true);
+});
+
+test("historial ITGF abre su formulario o detalle y mantiene estado y acción separados", function () {
+    const { contexto } = prepararInterfaz();
+    for (const [estado, ruta] of [["Borrador", "formulario-itgf.html?agente=TM009&tipo=ITGF&borrador=91"],
+        ["Completada", "detalle-itgf.html?agente=TM009&sesion=91"]]) {
+        contexto.sesion = { id: "91", agenteId: "TM009", tipo: "ITGF", clase: "itgf", estado };
+        const fila = vm.runInContext("crearFilaHistorial(sesion)", contexto);
+        assert.equal(fila.children[3].children[0].textContent, "ITGF");
+        assert.equal(fila.children[4].children.length, 1);
+        assert.equal(fila.children[5].children[0].href, ruta);
+    }
 });

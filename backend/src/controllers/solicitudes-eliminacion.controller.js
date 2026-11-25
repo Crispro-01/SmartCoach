@@ -1,7 +1,8 @@
 import { pool } from "../config/database.js";
 
 // Una solicitud deja constancia del motivo. Esta ruta no borra ninguna sesión.
-export async function solicitarEliminacionCoaching(solicitud, respuesta) {
+export async function solicitarEliminacionCoaching(solicitud, respuesta, tipo = "COACHING") {
+    if (!["COACHING", "ITGF"].includes(tipo)) return respuesta.status(400).json({ estado: "error", mensaje: "Tipo de sesión inválido." });
     const id = Number(solicitud.params.id);
     const motivo = typeof solicitud.body?.motivo === "string" ? solicitud.body.motivo.trim() : "";
     if (!Number.isSafeInteger(id) || id < 1 || motivo.length < 20 || motivo.length > 1000) {
@@ -21,13 +22,15 @@ export async function solicitarEliminacionCoaching(solicitud, respuesta) {
         // El bloqueo de la sesión evita dos solicitudes simultáneas para el mismo Coaching.
         const [sesiones] = await conexion.execute(
             "SELECT e.codigo AS estado FROM sesiones s " +
+            "JOIN usuarios a ON a.employee_id = s.agente_id " +
             "JOIN tipos_sesion t ON t.tipo_sesion_id = s.tipo_sesion_id " +
             "JOIN estados_sesion e ON e.estado_sesion_id = s.estado_sesion_id " +
-            "WHERE s.sesion_id = ? AND s.coach_id = ? AND t.codigo = 'COACHING' FOR UPDATE",
-            [id, solicitud.usuario.employeeId]
+            "WHERE s.sesion_id = ? AND s.coach_id = ? AND a.supervisor_id = s.coach_id " +
+            "AND a.activo = TRUE AND t.codigo = ? FOR UPDATE",
+            [id, solicitud.usuario.employeeId, tipo]
         );
         if (!sesiones.length) {
-            return respuesta.status(404).json({ estado: "error", mensaje: "No se encontró este Coaching en tu equipo." });
+            return respuesta.status(404).json({ estado: "error", mensaje: "No se encontró esta sesión en tu equipo." });
         }
         if (sesiones[0].estado !== "COMPLETADA") {
             return respuesta.status(409).json({ estado: "error", mensaje: "Solo se puede solicitar la eliminación de una sesión completada." });

@@ -1,0 +1,181 @@
+import { pool } from "../config/database.js";
+
+class ErrorItgf extends Error {
+    constructor(message, status = 400) { super(message); this.status = status; }
+}
+
+function id(valor) {
+    const numero = Number(valor);
+    if (!["number", "string"].includes(typeof valor) || !Number.isSafeInteger(numero) || numero < 1) {
+        throw new ErrorItgf("Indica un identificador válido.");
+    }
+    return numero;
+}
+
+function texto(valor, nombre, maximo) {
+    if (typeof valor !== "string" || !valor.trim() || valor.trim().length > maximo) {
+        throw new ErrorItgf(`Revisa el campo ${nombre}.`);
+    }
+    return valor.trim();
+}
+
+async function agenteAsignado(conexion, agenteId, coachId) {
+    const [filas] = await conexion.execute(
+        "SELECT a.employee_id FROM usuarios a JOIN roles r ON r.rol_id = a.rol_id " +
+        "WHERE a.employee_id = ? AND a.supervisor_id = ? AND a.activo = TRUE AND r.nombre = 'Agente'",
+        [texto(agenteId, "agente", 32), coachId]
+    );
+    if (!filas.length) throw new ErrorItgf("No se encontró un agente activo de tu equipo.", 404);
+}
+
+async function borrador(conexion, sesionId, agenteId, coachId, bloquear = false) {
+    const [filas] = await conexion.execute(
+        "SELECT s.sesion_id AS id, s.borrador_json AS contenido, e.codigo AS estado " +
+        "FROM sesiones s JOIN tipos_sesion t ON t.tipo_sesion_id = s.tipo_sesion_id " +
+        "JOIN estados_sesion e ON e.estado_sesion_id = s.estado_sesion_id " +
+        "WHERE s.sesion_id = ? AND s.agente_id = ? AND s.coach_id = ? AND t.codigo = 'ITGF'" +
+        (bloquear ? " FOR UPDATE" : ""), [id(sesionId), agenteId, coachId]
+    );
+    if (!filas.length) throw new ErrorItgf("No se encontró la sesión incompleta de ITGF.", 404);
+    if (filas[0].estado !== "BORRADOR") throw new ErrorItgf("Esta sesión está completada y no se puede modificar.", 409);
+    return filas[0];
+}
+
+function contenido(cuerpo) {
+    if (!cuerpo || typeof cuerpo !== "object" || Array.isArray(cuerpo)) throw new ErrorItgf("Contenido inválido.");
+    texto(cuerpo.agentId, "agente", 32);
+    const json = JSON.stringify(cuerpo);
+    if (Buffer.byteLength(json, "utf8") > 20000) throw new ErrorItgf("El contenido supera el tamaño permitido.");
+    return json;
+}
+
+function normalizar(cuerpo) {
+    contenido(cuerpo);
+    if (typeof cuerpo.fulfilled !== "boolean") throw new ErrorItgf("Selecciona Sí o No en el comportamiento trabajado.");
+    return [
+        texto(cuerpo.contactId, "Contact ID", 80), id(cuerpo.callDriverId), id(cuerpo.behaviorId), cuerpo.fulfilled,
+        texto(cuerpo.observations, "observaciones", 1500),
+        texto(cuerpo.commitmentWhat, "qué va a hacer", 1000),
+        texto(cuerpo.commitmentHow, "cómo lo va a hacer", 1000),
+        texto(cuerpo.commitmentWhen, "cuándo lo va a hacer", 1000)
+    ];
+}
+
+// Cada cambio de estado bloquea la sesión. Completar y descartar simultáneamente
+// no pueden dejar una sesión parcial ni eliminar una ya completada.
+function operacion(accion) {
+    return async function (solicitud, respuesta) {
+        let conexion;
+        let transaccion = false;
+        try {
+            const lectura = accion === "leer";
+            const agenteId = lectura ? solicitud.query.agenteId : solicitud.body?.agentId;
+            const json = ["guardar", "actualizar"].includes(accion) ? contenido(solicitud.body) : null;
+            const datos = accion === "completar" ? normalizar(solicitud.body) : null;
+            conexion = await pool.getConnection();
+            if (!lectura) { await conexion.beginTransaction(); transaccion = true; }
+            await agenteAsignado(conexion, agenteId, solicitud.usuario.employeeId);
+            let sesionId;
+            if (["leer", "actualizar", "descartar"].includes(accion) || (accion === "completar" && solicitud.body?.draftId != null)) {
+                const fila = await borrador(conexion, solicitud.params.id ?? solicitud.body.draftId,
+                    agenteId, solicitud.usuario.employeeId, !lectura);
+                sesionId = fila.id;
+                if (lectura) return respuesta.json({ estado: "ok", datos: {
+                    sesionId: String(sesionId), contenido: typeof fila.contenido === "string" ? JSON.parse(fila.contenido) : fila.contenido
+                } });
+            }
+            if (accion === "descartar") {
+                await conexion.execute("DELETE FROM sesiones WHERE sesion_id = ?", [sesionId]);
+            } else if (accion === "actualizar") {
+                await conexion.execute("UPDATE sesiones SET borrador_json = ? WHERE sesion_id = ?", [json, sesionId]);
+            } else {
+                const estado = accion === "completar" ? "COMPLETADA" : "BORRADOR";
+                const [catalogos] = await conexion.execute(
+                    "SELECT t.tipo_sesion_id, e.estado_sesion_id FROM tipos_sesion t CROSS JOIN estados_sesion e " +
+                    "WHERE t.codigo = 'ITGF' AND e.codigo = ?", [estado]
+                );
+                if (!catalogos.length) throw new ErrorItgf("Faltan los catálogos de ITGF.", 500);
+                if (datos) {
+                    const [drivers] = await conexion.execute(
+                        "SELECT d.call_driver_id FROM call_drivers d JOIN categorias_call_driver c " +
+                        "ON c.categoria_call_driver_id = d.categoria_call_driver_id " +
+                        "WHERE d.call_driver_id = ? AND d.activo = TRUE AND c.activo = TRUE", [datos[1]]);
+                    const [comportamientos] = await conexion.execute(
+                        "SELECT comportamiento_id FROM comportamientos WHERE comportamiento_id = ? AND activo = TRUE", [datos[2]]);
+                    if (!drivers.length || !comportamientos.length) throw new ErrorItgf("Selecciona un Call Driver y un comportamiento disponibles.");
+                }
+                if (sesionId) {
+                    await conexion.execute(
+                        "UPDATE sesiones SET estado_sesion_id = ?, tema = 'In The Game Feedback', " +
+                        "fecha_completada = CURRENT_TIMESTAMP, borrador_json = NULL WHERE sesion_id = ?",
+                        [catalogos[0].estado_sesion_id, sesionId]);
+                } else {
+                    const [nueva] = await conexion.execute(
+                        "INSERT INTO sesiones (agente_id, coach_id, tipo_sesion_id, estado_sesion_id, tema, borrador_json, fecha_completada) " +
+                        "VALUES (?, ?, ?, ?, 'In The Game Feedback', ?, " + (datos ? "CURRENT_TIMESTAMP" : "NULL") + ")",
+                        [agenteId, solicitud.usuario.employeeId, catalogos[0].tipo_sesion_id, catalogos[0].estado_sesion_id, json]);
+                    sesionId = nueva.insertId;
+                }
+                if (datos) await conexion.execute(
+                    "INSERT INTO sesiones_itgf (sesion_id, contact_id, call_driver_id, comportamiento_id, cumplio_comportamiento, " +
+                    "observaciones, compromiso_que, compromiso_como, compromiso_cuando) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [sesionId, ...datos]);
+            }
+            await conexion.commit(); transaccion = false;
+            return respuesta.status(["guardar", "completar"].includes(accion) ? 201 : 200)
+                .json({ estado: "ok", datos: { sesionId: String(sesionId) } });
+        } catch (error) {
+            console.error(`No se pudo ${accion} ITGF:`, error.message);
+            return respuesta.status(error.status || 500).json({ estado: "error",
+                mensaje: error.status ? error.message : "No se pudo gestionar la sesión ITGF. Intenta de nuevo." });
+        } finally {
+            if (transaccion && conexion) {
+                try { await conexion.rollback(); } catch (error) { console.error("No se pudo revertir ITGF:", error.message); }
+            }
+            if (conexion) conexion.release();
+        }
+    };
+}
+
+export const crearBorradorItgf = operacion("guardar");
+export const obtenerBorradorItgf = operacion("leer");
+export const actualizarBorradorItgf = operacion("actualizar");
+export const descartarBorradorItgf = operacion("descartar");
+export const completarItgf = operacion("completar");
+
+export async function consultarItgf(solicitud, respuesta) {
+    let conexion;
+    try {
+        const sesionId = id(solicitud.params.id);
+        const agenteId = texto(solicitud.query.agenteId, "agente", 32);
+        const manager = solicitud.usuario.rol === "Manager";
+        conexion = await pool.getConnection();
+        const [filas] = await conexion.execute(
+            "SELECT s.sesion_id AS id, s.agente_id AS agenteId, a.nombre AS agenteNombre, c.nombre AS coachNombre, " +
+            "DATE_FORMAT(s.fecha_creacion, '%d/%m/%Y %H:%i') AS fechaCreacion, " +
+            "DATE_FORMAT(s.fecha_completada, '%d/%m/%Y %H:%i') AS fechaCompletada, " +
+            "i.contact_id AS contactId, d.nombre AS callDriver, b.nombre AS comportamiento, i.cumplio_comportamiento AS cumplio, " +
+            "i.observaciones, i.compromiso_que AS compromisoQue, i.compromiso_como AS compromisoComo, i.compromiso_cuando AS compromisoCuando " +
+            "FROM sesiones s JOIN tipos_sesion t ON t.tipo_sesion_id = s.tipo_sesion_id " +
+            "JOIN estados_sesion e ON e.estado_sesion_id = s.estado_sesion_id " +
+            "JOIN sesiones_itgf i ON i.sesion_id = s.sesion_id JOIN usuarios a ON a.employee_id = s.agente_id " +
+            "JOIN usuarios c ON c.employee_id = s.coach_id JOIN call_drivers d ON d.call_driver_id = i.call_driver_id " +
+            "JOIN comportamientos b ON b.comportamiento_id = i.comportamiento_id " +
+            "WHERE s.sesion_id = ? AND s.agente_id = ? AND " + (manager ? "c.supervisor_id" : "s.coach_id") + " = ? " +
+            "AND t.codigo = 'ITGF' AND e.codigo = 'COMPLETADA'" +
+            (manager ? "" : " AND a.supervisor_id = s.coach_id AND a.activo = TRUE AND NOT EXISTS " +
+                "(SELECT 1 FROM solicitudes_eliminacion_sesion q WHERE q.sesion_id = s.sesion_id AND q.estado = 'APROBADA')"),
+            [sesionId, agenteId, solicitud.usuario.employeeId]);
+        if (!filas.length) throw new ErrorItgf("No se encontró una sesión ITGF completada para este agente.", 404);
+        const [solicitudes] = await conexion.execute(
+            "SELECT estado, motivo, respuesta_revision AS respuestaRevision, " +
+            "DATE_FORMAT(fecha_solicitud, '%d/%m/%Y %H:%i') AS fechaSolicitud " +
+            "FROM solicitudes_eliminacion_sesion WHERE sesion_id = ? ORDER BY solicitud_id DESC LIMIT 1", [sesionId]);
+        return respuesta.json({ estado: "ok", datos: { ...filas[0], cumplio: Boolean(filas[0].cumplio),
+            solicitudEliminacion: solicitudes[0] || null } });
+    } catch (error) {
+        console.error("No se pudo consultar ITGF:", error.message);
+        return respuesta.status(error.status || 500).json({ estado: "error",
+            mensaje: error.status ? error.message : "No se pudo consultar la sesión ITGF." });
+    } finally { if (conexion) conexion.release(); }
+}

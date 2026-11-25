@@ -43,17 +43,17 @@ function crearCeldaEstado(sesion) {
 function crearCeldaAccion(sesion) {
     const celda = document.createElement("td");
 
-    if (sesion.estado === "Borrador" && sesion.clase === "coaching") {
+    if (sesion.estado === "Borrador" && ["coaching", "itgf"].includes(sesion.clase)) {
         const enlace = document.createElement("a");
-        enlace.href = `formulario-coaching.html?agente=${encodeURIComponent(sesion.agenteId)}&tipo=Coaching&borrador=${encodeURIComponent(sesion.id)}`;
+        enlace.href = `${sesion.clase === "itgf" ? "formulario-itgf.html" : "formulario-coaching.html"}?agente=${encodeURIComponent(sesion.agenteId)}&tipo=${sesion.clase === "itgf" ? "ITGF" : "Coaching"}&borrador=${encodeURIComponent(sesion.id)}`;
         enlace.className = "boton-principal enlace-boton accion-sesion";
         enlace.textContent = "Continuar";
         celda.append(enlace);
     }
 
-    if (sesion.estado === "Completada" && sesion.clase === "coaching") {
+    if (sesion.estado === "Completada" && ["coaching", "itgf"].includes(sesion.clase)) {
         const enlace = document.createElement("a");
-        enlace.href = `detalle-coaching.html?agente=${encodeURIComponent(sesion.agenteId)}&sesion=${encodeURIComponent(sesion.id)}`;
+        enlace.href = `${sesion.clase === "itgf" ? "detalle-itgf.html" : "detalle-coaching.html"}?agente=${encodeURIComponent(sesion.agenteId)}&sesion=${encodeURIComponent(sesion.id)}`;
         enlace.className = "boton-principal enlace-boton accion-sesion";
         enlace.textContent = "Ver";
         celda.append(enlace);
